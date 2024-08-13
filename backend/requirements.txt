@@ -1,0 +1,13 @@
+flask
+flask-cors
+python-dotenv
+langchain
+tiktoken
+PyPDF2
+mysql-connector-python
+langchain_openai
+langchain_community
+pypdf
+docx2txt
+fastapi-cors
+docarray
