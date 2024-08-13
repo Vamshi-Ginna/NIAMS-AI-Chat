@@ -1,3 +1,4 @@
+/* Existing styles */
 .App {
   text-align: center;
 }
@@ -35,4 +36,264 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Chat Styles */
+.flex {
+  display: flex;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-start {
+  justify-content: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-right: calc(0.5rem * var(--tw-space-x-reverse));
+  margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+.bg-blue-200 {
+  background-color: #bfdbfe;
+}
+
+.bg-green-200 {
+  background-color: #bbf7d0;
+}
+
+.rounded {
+  border-radius: 0.375rem;
+}
+
+.p-1 {
+  padding: 0.25rem;
+}
+
+.max-w-xl {
+  max-width: 36rem;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+
+.text-green-600 {
+  color: #16a34a;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom styles */
+.chat-message-container {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.chat-message-content {
+  max-width: calc(100% - 40px);
+}
+
+.chat-message-icon {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.token-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #f1f1f1;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message-content {
+  width: 100%;
+}
+
+.chat-message {
+  width: 100%;
+}
+
+.chat-bubble {
+  max-width: 50%; /* Adjust this percentage to control the width of the chat bubble */
+  width: fit-content;
+}
+
+/* Icon size adjustment */
+.icon-size svg {
+  width: 24px; /* Change this value to adjust the size */
+  height: 24px; /* Change this value to adjust the size */
+}
+
+/* New styles for icons */
+.chat-bubble .flex.justify-end.space-x-2 svg {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.copied-popup {
+  position: absolute;
+  top: 100%;
+  left: 0; /* Position it directly under the message */
+  background-color: rgba(255, 255, 255, 0.8); /* Light white with transparency */
+  padding: 5px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: bold;
+  color: black; /* Black text color */
+  animation: fade-in-out 2s;
+  transform: translateY(4px); /* Slight offset for better placement */
+}
+
+@keyframes fade-in-out {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.feedback-popup {
+  background-color: #f1f1f1;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  text-align: center;
+}
+
+/* Markdown Styles */
+.react-markdown {
+  line-height: 1.5;
+}
+
+.react-markdown h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+.react-markdown h2 {
+  font-size: 1.5em;
+  margin: 0.75em 0;
+}
+
+.react-markdown h3 {
+  font-size: 1.17em;
+  margin: 0.83em 0;
+}
+
+.react-markdown h4 {
+  font-size: 1em;
+  margin: 1.12em 0;
+}
+
+.react-markdown h5 {
+  font-size: 0.83em;
+  margin: 1.5em 0;
+}
+
+.react-markdown h6 {
+  font-size: 0.75em;
+  margin: 1.67em 0;
+}
+
+.react-markdown p {
+  margin: 1em 0;
+}
+
+.react-markdown ul,
+.react-markdown ol {
+  padding-left: 2em;
+  margin: 1em 0;
+}
+
+.react-markdown li {
+  margin-bottom: 0.5em;
+}
+
+.react-markdown code {
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-family: monospace;
+}
+
+.react-markdown pre {
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+/* Adjustments for blockquotes */
+.react-markdown blockquote {
+  border-left: 4px solid #ddd;
+  margin: 1.5em 0;
+  padding: 0.5em 10px;
+  color: #666;
+}
+
+/* Adjustments for horizontal rules */
+.react-markdown hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 1em 0;
+}
+
+/* Additional styles for hyperlinks */
+.react-markdown a {
+  color: #1a0dab;
+  text-decoration: none;
+}
+
+.react-markdown a:hover {
+  text-decoration: underline;
+}
+
+.text-gray-500 {
+  color: #6b7280; /* Tailwind gray-500 color */
+}
+
+.text-sm {
+  font-size: 0.875rem; /* Tailwind text-sm size */
+}
+
+.mt-2 {
+  margin-top: 0.5rem; /* Tailwind mt-2 size */
+}
+
+.mt-1 {
+  margin-top: 0.25rem; /* Reduced margin-top for disclaimer */
+}
+
+.p-4 {
+  padding: 1rem; /* Original padding */
+}
+
+.p-2 {
+  padding: 0.5rem; /* Reduced padding */
+}
+
+.ml-2 {
+  margin-left: 0.5rem; /* Tailwind margin-left size */
 }
