@@ -8,3 +8,4 @@ instance/
 .coverage
 logs/
 *.log
+.env_docker

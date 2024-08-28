@@ -1,0 +1,13 @@
+/node_modules
+/build
+.git
+*.md
+.gitignore
+.storybook
+.husky
+.github
+.chglog
+.idea
+.env
+
+

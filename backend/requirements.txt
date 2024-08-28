@@ -11,3 +11,6 @@ pypdf
 docx2txt
 fastapi-cors
 docarray
+uvicorn
+beautifulsoup4
+python-multipart

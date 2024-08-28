@@ -1,0 +1,74 @@
+# Ignore Python cache files and directories
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Ignore environment files
+.env
+*.env
+.env_docker
+
+# Ignore log files
+*.log
+
+# Ignore virtual environments
+venv/
+.virtualenv/
+.venv/  # Added your specific virtual environment folder
+
+# Ignore git directory and files
+.git/
+.gitignore
+
+# Ignore Dockerfile itself and related files
+Dockerfile
+docker-compose.yml
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore unnecessary config files
+*.config
+
+# Ignore compiled files
+*.so
+*.o
+*.a
+*.out
+
+# Ignore IDE-specific files and directories
+.vscode/
+.idea/
+*.swp
+
+# Ignore test and documentation directories
+tests/
+docs/
+
+# Ignore any local development scripts
+*.sh
+*.bat
+
+# Ignore any backup files
+*~
+*.bak
+
+# Ignore Python distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST

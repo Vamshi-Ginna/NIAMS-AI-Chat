@@ -23,7 +23,7 @@ async def send_message(request: ChatRequest):
         if retriever:
             context = retriever.get_relevant_documents(request.message)
             context_text = " ".join([doc.page_content for doc in context])
-
+        
         conversation_history = "\n".join([f"{msg.type.capitalize()}: {msg.content}" for msg in request.history])
         
         template = """You are a helpful assistant. Answer the question based on the provided context and conversation history. 

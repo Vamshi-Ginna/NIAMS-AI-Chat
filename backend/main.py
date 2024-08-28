@@ -5,7 +5,7 @@ from app.services.chat import chat_router
 from app.services.summarize import summarize_router
 from app.services.feedback import feedback_router
 from app.services.bing_search import bing_router  # Import Bing router
-
+import os
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,7 +13,15 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # Configure CORS
-origins = ["http://localhost:3000"]  # Frontend URL
+# origins = [
+#     "http://localhost:3000",
+#     "https://lcg-chatgpt-react-app-bmhkexeyguccateq.eastus-01.azurewebsites.net"
+# ]
+
+# Get CORS origins from environment variable
+origins = os.getenv("CORS_ORIGINS").split(",")
+print(f"Allowed CORS Origins: {origins}")  # Debugging output
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,7 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(chat_router, prefix="/chat", tags=["chat"])
 app.include_router(summarize_router, prefix="/summarize", tags=["summarize"])
 app.include_router(feedback_router, prefix="/feedback", tags=["feedback"])
