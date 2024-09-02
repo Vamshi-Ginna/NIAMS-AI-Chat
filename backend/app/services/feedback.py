@@ -1,31 +1,27 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from app.models.feedback import Feedback
-import mysql.connector
-from config import Config
+from app.database import Database
 
 feedback_router = APIRouter()
 logger = logging.getLogger("feedback_service")
 
-def sql_connect(message, feedback):
-    mydb = mysql.connector.connect(
-        host=Config.MY_SQL_HOST,
-        user=Config.MY_SQL_USER,
-        password=Config.MY_SQL_PASSWORD,
-        database=Config.MY_SQL_DB
-    )
-    mycursor = mydb.cursor()
-    sql = "INSERT INTO feedback (message, feedback) VALUES (%s, %s)"
-    val = (message, feedback)
-    mycursor.execute(sql, val)
-    mydb.commit()
-    mydb.close()
-
 @feedback_router.post("/")
-async def receive_feedback(feedback: Feedback):
+async def receive_feedback(request: Request, feedback: Feedback):
     try:
-        logger.info("receive_feedback endpoint accessed with message: %s", feedback.message)
-        sql_connect(feedback.message, feedback.feedback)
+        logger.info("receive_feedback endpoint accessed with message_id: %s", feedback.message_id)
+        
+        # Get the database connection from the FastAPI app state
+        db: Database = request.app.state.db
+        
+        # Insert the feedback into the database
+        sql = """
+            INSERT INTO Feedback (feedback_id, message_id, rating, comment, user_id)
+            VALUES (%s, %s, %s, %s)
+        """
+        values = ('117a7be7-b235-456f-86d1-cdcd50fa8fb5',feedback.message_id, feedback.rating, feedback.comment, '550e8400-e29b-41d4-a716-446655440000')
+        db.execute_query(sql, values)
+        
         return {"status": "Feedback received"}
     except Exception as e:
         logger.error("Error in receive_feedback: %s", str(e))
