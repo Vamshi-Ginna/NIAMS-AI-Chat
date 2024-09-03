@@ -33,13 +33,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(chat_router, prefix="/chat", tags=["chat"])
+app.include_router(summarize_router, prefix="/summarize", tags=["summarize"])
+app.include_router(feedback_router, prefix="/feedback", tags=["feedback"])
+app.include_router(bing_router, prefix="/bing", tags=["bing"])  # Include Bing router
+
 @app.get("/")
-async def read_root(payload: dict = Depends(validate_token)):
+def read_root():
     logger.info("Root endpoint accessed")
     return {"message": "Welcome to the Azure OpenAI Chat API"}
-
-# Include routers with token validation
-app.include_router(chat_router, prefix="/chat", tags=["chat"], dependencies=[Depends(validate_token)])
-app.include_router(summarize_router, prefix="/summarize", tags=["summarize"], dependencies=[Depends(validate_token)])
-app.include_router(feedback_router, prefix="/feedback", tags=["feedback"], dependencies=[Depends(validate_token)])
-app.include_router(bing_router, prefix="/bing", tags=["bing"], dependencies=[Depends(validate_token)])
