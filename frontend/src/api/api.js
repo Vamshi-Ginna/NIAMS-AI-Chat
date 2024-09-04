@@ -48,6 +48,17 @@ api.interceptors.request.use(async (config) => {
   return Promise.reject(error);
 });
 
+// Function to login the user in the backend after Azure AD login
+export const loginUser = async () => {
+  try {
+    const response = await api.post('/auth/login');
+    return response.data;
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    throw error;
+  }
+};
+
 export const sendMessage = async (message, history) => {
   try {
     const response = await api.post('/chat/send', {

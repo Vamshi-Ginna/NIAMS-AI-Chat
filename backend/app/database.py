@@ -50,9 +50,9 @@ class Database:
             if not self.table_exists(cursor, 'Users'):
                 cursor.execute("""
                     CREATE TABLE Users (
-                        user_id CHAR(36) PRIMARY KEY,
-                        azure_ad_id VARCHAR(255) UNIQUE NOT NULL,
-                        name VARCHAR(255) NOT NULL
+                        user_id VARCHAR(255) PRIMARY KEY, 
+                        name VARCHAR(255) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
                     )
                 """)
                 logger.info("Table `Users` created.")
@@ -64,10 +64,11 @@ class Database:
                 cursor.execute("""
                     CREATE TABLE Chat_Messages (
                         message_id CHAR(36) PRIMARY KEY,
-                        user_id CHAR(36),
+                        user_id VARCHAR(255),
                         user_prompt TEXT NOT NULL,
                         response TEXT NOT NULL,
                         source ENUM('OpenAI', 'Bing', 'Document') NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                         FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL
                     )
                 """)
@@ -83,7 +84,8 @@ class Database:
                         message_id CHAR(36),
                         rating INT CHECK (rating >= 1 AND rating <= 5),
                         comment TEXT,
-                        user_id CHAR(36),
+                        user_id VARCHAR(255),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                         FOREIGN KEY (message_id) REFERENCES Chat_Messages(message_id) ON DELETE CASCADE,
                         FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL
                     )
@@ -99,6 +101,7 @@ class Database:
                         price_id CHAR(36) PRIMARY KEY,
                         message_id CHAR(36),
                         completion_price DECIMAL(10, 2) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                         FOREIGN KEY (message_id) REFERENCES Chat_Messages(message_id) ON DELETE CASCADE
                     )
                 """)

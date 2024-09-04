@@ -1,20 +1,49 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useMsal } from '@azure/msal-react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Overview from './pages/Overview';
 import Chat from './pages/Chat';
 import { MsalAuthenticationTemplate } from '@azure/msal-react';
 import { loginRequest } from './authConfig';
-import { InteractionType } from '@azure/msal-browser'; // Import InteractionType
+import { InteractionType } from '@azure/msal-browser';
+import { loginUser } from './api/api';  // Import the login API function
 
 const App: React.FC = () => {
+  const { instance, accounts } = useMsal();
   const [chats, setChats] = React.useState<{ id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[]>([]);
+  const userName = accounts.length > 0 ? accounts[0].name ?? "Guest" : "Guest";
+
+  useEffect(() => {
+    // Call the login API after the user is authenticated
+    if (accounts.length > 0) {
+      // Call the loginUser function to trigger the API call
+      loginUser().then(response => {
+        console.log("User login successful:", response);
+      }).catch(error => {
+        console.error("Error during login:", error);
+      });
+    }
+  }, [accounts]);  // Trigger whenever the `accounts` array changes
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      //event.returnValue = 'Your chat session data will be lost if you refresh or close the tab.';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   return (
     <MsalAuthenticationTemplate interactionType={InteractionType.Redirect} authenticationRequest={loginRequest}>
       <Router>
         <div className="flex h-screen">
-          <Sidebar chats={chats} setChats={setChats} />
+          <Sidebar chats={chats} setChats={setChats} userName={userName} />
           <div className="flex-1 overflow-y-auto relative">
             <Routes>
               <Route path="/" element={<Overview />} />

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaInfoCircle, FaComments } from 'react-icons/fa';
+import { FaBars, FaInfoCircle, FaComments, FaBook  } from 'react-icons/fa';
 
 interface SidebarProps {
   chats: { id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[];
   setChats: React.Dispatch<React.SetStateAction<{ id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[]>>;
+  userName: string; // Added userName prop
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ chats, setChats }) => {
+const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -57,6 +58,10 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats }) => {
             <FaComments className="mr-2" />
             {!isCollapsed && <span>Chat</span>}
           </div>
+          <div className="text-blue-500 font-semibold hover:bg-gray-100 flex items-center py-3 px-4 cursor-pointer" onClick={handleChatClick}>
+            <FaBook className="mr-2" />
+            {!isCollapsed && <span>Interactive Knowledge Base</span>}
+          </div>
         </div>
       </nav>
       {!isCollapsed && (
@@ -67,8 +72,11 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats }) => {
               Start New Chat
             </button>
             <div className="mt-4">
-              <span className="block text-gray-800 font-semibold">Total Tokens: {totalTokens}</span>
-              <span className="block text-gray-800 font-semibold">Total Cost: ${totalCost.toFixed(2)}</span>
+              <span className="block text-gray-800 font-semibold text-xs">Logged in as: {userName}</span>
+            </div>
+            <div className="mt-4">
+              <span className="block text-gray-800 font-semibold text-sm">Total Tokens for this session: {totalTokens}</span>
+              <span className="block text-gray-800 font-semibold text-sm">Total Cost for this session: ${totalCost.toFixed(2)}</span>
             </div>
           </div>
           <div className="p-4">
