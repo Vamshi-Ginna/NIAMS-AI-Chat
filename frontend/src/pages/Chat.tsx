@@ -7,6 +7,7 @@ import { sendMessage, summarizeFile } from '../api/api';
 interface Message {
   type: string;
   content: string;
+  message_id?: string;
   isLoading?: boolean;
   isNew?: boolean;
 }
@@ -41,17 +42,19 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
   }
 
   const handleSendMessage = async (message: string) => {
+    // Add user message to the chat
     const updatedChats = chats.map(chat => {
       if (chat.id === id) {
         return {
           ...chat,
-          messages: [...chat.messages, { type: 'user', content: message, isNew: true }] 
+          messages: [...chat.messages, { type: 'user', content: message, isNew: true }]
         };
       }
       return chat;
     });
     setChats(updatedChats);
 
+    // Add loading state for the assistant's response
     const updatedChatsWithLoading = updatedChats.map(chat => {
       if (chat.id === id) {
         return {
@@ -66,14 +69,17 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
     setIsLoading(true);
 
     try {
+      // Send message to the backend and capture the response
       const response = await sendMessage(message, chat.messages);
+
+      // Update the messages with the actual response and attach the message_id from the backend
       const updatedChatsWithResponse = updatedChatsWithLoading.map(chat => {
         if (chat.id === id) {
           return {
             ...chat,
             messages: chat.messages.map((msg, index) =>
               msg.isLoading
-                ? { type: 'assistant', content: response.response, isNew: true }
+                ? { type: 'assistant', content: response.response, isNew: true, message_id: response.message_id } // Attach message_id to the assistant's message
                 : { ...msg, isNew: false }
             ),
             tokens: chat.tokens + response.tokens,
@@ -84,6 +90,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
       });
       setChats(updatedChatsWithResponse);
     } catch (error) {
+      // Handle error
       const updatedChatsWithError = updatedChatsWithLoading.map(chat => {
         if (chat.id === id) {
           return {
@@ -108,7 +115,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
         if (c.id === chat.id) {
           return {
             ...c,
-            messages: [...c.messages, { type: 'user', content: message, isNew: true }] 
+            messages: [...c.messages, { type: 'user', content: message, isNew: true }]
           };
         }
         return c;
@@ -119,7 +126,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
         if (c.id === chat.id) {
           return {
             ...c,
-            messages: [...c.messages, { type: 'assistant', content: '...', isLoading: true, isNew: true }] 
+            messages: [...c.messages, { type: 'assistant', content: '...', isLoading: true, isNew: true }]
           };
         }
         return c;

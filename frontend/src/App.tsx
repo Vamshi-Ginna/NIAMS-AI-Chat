@@ -7,7 +7,7 @@ import Chat from './pages/Chat';
 import { MsalAuthenticationTemplate } from '@azure/msal-react';
 import { loginRequest } from './authConfig';
 import { InteractionType } from '@azure/msal-browser';
-import { loginUser } from './api/api';  // Import the login API function
+import { loginUser } from './api/api';  
 
 const App: React.FC = () => {
   const { instance, accounts } = useMsal();
@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const userName = accounts.length > 0 ? accounts[0].name ?? "Guest" : "Guest";
 
   useEffect(() => {
-    // Call the login API after the user is authenticated
+    // Call the login API after the user is authenticated to create a user record on backend if not already created
     if (accounts.length > 0) {
       // Call the loginUser function to trigger the API call
       loginUser().then(response => {
@@ -24,7 +24,7 @@ const App: React.FC = () => {
         console.error("Error during login:", error);
       });
     }
-  }, [accounts]);  // Trigger whenever the `accounts` array changes
+  }, [accounts]);  // Trigger whenever the `accounts` (multiple AD accounts) array changes
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {

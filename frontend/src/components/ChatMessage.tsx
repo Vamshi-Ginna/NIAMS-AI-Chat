@@ -118,10 +118,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
       )}
       {isFeedbackOpen && (
         <FeedbackPopup
-          onClose={() => setIsFeedbackOpen(false)}
-          onSubmit={handleFeedbackSubmit}
+           onClose={() => setIsFeedbackOpen(false)}
+           onSubmit={handleFeedbackSubmit}
+           messageId={message.message_id} // Pass the message_id to FeedbackPopup
         />
       )}
+
     </div>
   );
 };

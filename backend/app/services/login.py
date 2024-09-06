@@ -4,14 +4,12 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from app.database import Database
 from app.services.token_validation import validate_token
 
-# Create a router for login functionality
 login_router = APIRouter()
 logger = logging.getLogger("login_service")
 
 @login_router.post("/login")
 async def login(request: Request, payload: dict = Depends(validate_token)):
     try:
-        # Extract oid and name from the token payload
         oid = payload.get("oid")
         given_name = payload.get("name")
 
@@ -20,14 +18,13 @@ async def login(request: Request, payload: dict = Depends(validate_token)):
 
         logger.info("Login attempt with oid: %s", oid)
 
-        # Get the database connection from the FastAPI app state
         db: Database = request.app.state.db
 
         # Check if user already exists in the database
         user_query = "SELECT user_id, name FROM Users WHERE user_id = %s"
         cursor = db.connection.cursor()
         cursor.execute(user_query, (oid,))
-        user = cursor.fetchone()  # Fetch the result of the query
+        user = cursor.fetchone()  
 
         if user:
             # User exists, return user info

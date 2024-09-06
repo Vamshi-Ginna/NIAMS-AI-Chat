@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
+import { sendFeedback } from '../api/api';  
 
 interface FeedbackPopupProps {
   onClose: () => void;
   onSubmit: (rating: number, feedback: string) => void;
+  messageId: string; 
 }
 
-const FeedbackPopup: React.FC<FeedbackPopupProps> = ({ onClose, onSubmit }) => {
+const FeedbackPopup: React.FC<FeedbackPopupProps> = ({ onClose, onSubmit, messageId }) => {
   const [rating, setRating] = useState<number>(0);
   const [hover, setHover] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>('');
 
-  const handleSubmit = () => {
-    onSubmit(rating, feedback);
-    onClose(); // Close the popup after submission
+  const handleSubmit = async () => {
+    try {
+      // Call the API to send feedback
+      const response = await sendFeedback(messageId, rating, feedback);
+      if (response.status === "Feedback received") {
+        alert("Feedback successfully submitted!"); 
+      }
+      onSubmit(rating, feedback);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+    } finally {
+      onClose(); 
+    }
   };
 
   return (

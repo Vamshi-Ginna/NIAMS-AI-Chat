@@ -1,5 +1,4 @@
 # app/database.py
-
 import mysql.connector
 from mysql.connector import Error
 from config import Config
@@ -50,7 +49,7 @@ class Database:
             if not self.table_exists(cursor, 'Users'):
                 cursor.execute("""
                     CREATE TABLE Users (
-                        user_id VARCHAR(255) PRIMARY KEY, 
+                        user_id CHAR(36) PRIMARY KEY, 
                         name VARCHAR(255) NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
                     )
@@ -64,7 +63,7 @@ class Database:
                 cursor.execute("""
                     CREATE TABLE Chat_Messages (
                         message_id CHAR(36) PRIMARY KEY,
-                        user_id VARCHAR(255),
+                        user_id CHAR(36),
                         user_prompt TEXT NOT NULL,
                         response TEXT NOT NULL,
                         source ENUM('OpenAI', 'Bing', 'Document') NOT NULL,

@@ -43,4 +43,4 @@ app.include_router(login_router, prefix="/auth", tags=["auth"], dependencies=[De
 @app.get("/")
 def read_root():
     logger.info("Root endpoint accessed")
-    return {"message": "Welcome to the Azure OpenAI Chat API", "user": payload}
+    return {"message": "Welcome to the Azure OpenAI Chat API"}

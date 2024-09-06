@@ -32,7 +32,9 @@ def create_azure_client(temperature: float = 0.0):
         api_version=Config.AZURE_OPENAI_API_VERSION,
         temperature=temperature
     )
+    
     return llm
+
 
 def create_embeddings_model() -> OpenAIEmbeddings:
     embeddings = OpenAIEmbeddings(model=Config.OPENAI_EMBEDDINGS_MODEL, dimensions=1000)

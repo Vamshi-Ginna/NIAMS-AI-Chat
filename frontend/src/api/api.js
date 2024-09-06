@@ -59,13 +59,27 @@ export const loginUser = async () => {
   }
 };
 
+export const sendFeedback = async (messageId, rating, feedback) => {
+  try {
+    const response = await api.post('/feedback/', {
+      message_id: messageId,
+      rating: rating,
+      comment: feedback,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error sending feedback:", error);
+    throw error;
+  }
+};
+
 export const sendMessage = async (message, history) => {
   try {
     const response = await api.post('/chat/send', {
       message,
       history,
     });
-    return response.data;
+    return response.data;  // This will include message_id in the response
   } catch (error) {
     console.error("Error sending message:", error);
     throw error;
@@ -85,6 +99,31 @@ export const summarizeFile = async (file) => {
     return response.data.summary;
   } catch (error) {
     console.error("Error summarizing file:", error);
+    throw error;
+  }
+};
+
+
+export const storeFeedback = async (message, feedback) => {
+  try {
+    await axios.post(`${API_BASE_URL}/feedback`, {
+      message,
+      feedback
+    });
+  } catch (error) {
+    console.error("Error storing feedback:", error);
+    throw error;
+  }
+};
+
+export const searchBing = async (query) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/bing/search`, {
+      query
+    });
+    return response.data.results;
+  } catch (error) {
+    console.error("Error with Bing Search:", error);
     throw error;
   }
 };

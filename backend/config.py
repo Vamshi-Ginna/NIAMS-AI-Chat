@@ -21,3 +21,6 @@ class Config:
     MY_SQL_DB = os.getenv("mysql_db")
     BING_SEARCH_API_KEY = os.getenv('BING_SEARCH_API_KEY')
     BING_SEARCH_ENDPOINT = os.getenv('BING_SEARCH_ENDPOINT')
+    AZURE_TENANT_ID=os.getenv('AZURE_TENANT_ID')
+    AZURE_CLIENT_ID=os.getenv('AZURE_CLIENT_ID')
+    API_AUDIENCE=os.getenv('API_AUDIENCE')

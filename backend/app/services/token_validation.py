@@ -4,14 +4,15 @@ import jwt
 from fastapi import HTTPException, Security
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from jwt.algorithms import RSAAlgorithm
+from config import Config
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Azure AD Configuration
-AZURE_TENANT_ID = "f210b886-c80d-441b-8aad-167940670f0e"
-AZURE_CLIENT_ID = "29c99049-9afc-4aea-934d-ee15f7f3b597"
-API_AUDIENCE = "api://29c99049-9afc-4aea-934d-ee15f7f3b597"  # Application ID URI
+AZURE_TENANT_ID = Config.AZURE_TENANT_ID
+AZURE_CLIENT_ID = Config.AZURE_CLIENT_ID
+API_AUDIENCE = Config.API_AUDIENCE # Application ID URI
 OPENID_CONFIG_URL = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0/.well-known/openid-configuration"
 
 # Fetch OpenID configuration from Azure AD
