@@ -1,14 +1,15 @@
 import logging
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from app.models.summarize import SummarizeRequest
 from utils import summarize, calculate_tokens
+from app.services.token_validation import validate_token
 
 summarize_router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
 @summarize_router.post("/")
-async def summarize_file(file: UploadFile = File(...)):
+async def summarize_file(file: UploadFile = File(...), payload: dict = Depends(validate_token)):
     logger.info("summarize_file endpoint accessed with file: %s", file.filename)
     try:
         result, _ = summarize(file)

@@ -87,6 +87,15 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
             VALUES (%s, %s, %s, %s, %s)
         """, (message_id, user_id, request.message, assistant_message, source))
 
+         # Generate price ID
+        price_id = str(uuid.uuid4())  
+
+        # Store the price detials the price table
+        db.execute_query("""
+            INSERT INTO Price (price_id, message_id, completion_price)
+            VALUES (%s, %s, %s)
+        """, (price_id, message_id, cost))
+
         return {
             "response": assistant_message,
             "message_id": message_id, 
@@ -98,7 +107,7 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
         raise HTTPException(status_code=500, detail=str(e))
     
 @chat_router.post("/upload_document")
-async def upload_document(file: UploadFile):
+async def upload_document(file: UploadFile, req: Request, payload: dict = Depends(validate_token)):
     try:
         logger.info("upload_document endpoint accessed with file: %s", file.filename)
         result, new_retriever = summarize(file)
@@ -109,6 +118,30 @@ async def upload_document(file: UploadFile):
 
         tokens = calculate_tokens(summary_text)
         cost = round((tokens / 1000) * 0.06, 2)
+
+        # Extract oid from the validated token payload
+        user_id = payload.get("oid")
+
+        # Generate message IDs
+        message_id = str(uuid.uuid4())  
+
+        # Get the database connection from the FastAPI app state
+        db: Database = req.app.state.db
+
+        # Store the user prompt and assistant response in the chat_messages table
+        db.execute_query("""
+            INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (message_id, user_id, f"Generating File Summary for {file.filename}", summary_text, "Document"))
+
+         # Generate price ID
+        price_id = str(uuid.uuid4())  
+
+        # Store the price detials the price table
+        db.execute_query("""
+            INSERT INTO Price (price_id, message_id, completion_price)
+            VALUES (%s, %s, %s)
+        """, (price_id, message_id, cost))
 
         return {
             "summary": summary_text,

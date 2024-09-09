@@ -33,7 +33,7 @@ const getAccessToken = async () => {
   }
 };
 
-// Create an axios instance with an interceptor to add the token
+// Axios instance with an interceptor to add the token
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -91,9 +91,11 @@ export const summarizeFile = async (file) => {
   formData.append('file', file);
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/chat/upload_document`, formData, {
+    const token = await getAccessToken(); // Manually add the token to this request
+    const response = await api.post('/chat/upload_document', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        ...(token && { Authorization: `Bearer ${token}` }), 
       },
     });
     return response.data.summary;
@@ -103,13 +105,13 @@ export const summarizeFile = async (file) => {
   }
 };
 
-
 export const storeFeedback = async (message, feedback) => {
   try {
-    await axios.post(`${API_BASE_URL}/feedback`, {
+    const response = await api.post('/feedback', {
       message,
       feedback
     });
+    return response.data;
   } catch (error) {
     console.error("Error storing feedback:", error);
     throw error;
@@ -118,7 +120,7 @@ export const storeFeedback = async (message, feedback) => {
 
 export const searchBing = async (query) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/bing/search`, {
+    const response = await api.post('/bing/search', {
       query
     });
     return response.data.results;
