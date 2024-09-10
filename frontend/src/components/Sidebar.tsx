@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaInfoCircle, FaComments, FaBook  } from 'react-icons/fa';
+import { FaBars, FaInfoCircle, FaComments, FaBook, FaTimes, FaTrash  } from 'react-icons/fa';
 
 interface SidebarProps {
   chats: { id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[];
@@ -40,13 +40,34 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
     }
   };
 
+  const handleDeleteChat = (chatId: string) => {
+    if (window.confirm("Are you sure you want to delete this chat?")) {
+      const updatedChats = chats.filter((chat) => chat.id !== chatId);
+      setChats(updatedChats);
+  
+    // If the deleted chat was the active chat, navigate to the overview or another chat.
+    // if (updatedChats.length > 0) {
+    //   navigate(`/chat/${updatedChats[0].id}`);
+    // } else {
+      navigate(`/`);  //for now let's take the user to overview page
+    //}
+    }
+  };
+
   return (
     <div className={`bg-white shadow-md ${isCollapsed ? 'w-16' : 'w-64'} h-full relative transition-width duration-300 bg-gray-gradient`}>
       <div className="p-6 flex justify-between items-center">
         <button onClick={toggleSidebar} className="text-gray-800">
           <FaBars />
         </button>
-        {!isCollapsed && <h1 className="text-xl font-semibold text-gray-800 text-center flex-grow">LCG ChatGPT</h1>}
+        {!isCollapsed && (
+        <div className="bg-white p-2 rounded-lg shadow-md">
+        <img 
+          src="/niams_logo.jpg" 
+          alt="Logo" 
+          className="h-8 w-auto mx-auto" 
+        />
+      </div>)}
       </div>
       <nav className="mt-6">
         <div className="flex flex-col">
@@ -81,9 +102,17 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
           </div>
           <div className="p-4">
             {chats.map((chat, index) => (
-              <Link key={index} to={`/chat/${chat.id}`} className="text-gray-800 font-semibold hover:bg-gray-100 block py-2 px-4">
-                {chat.name}
-              </Link>
+             <div key={chat.id} className="flex justify-between items-center hover:bg-gray-100 group">
+             <Link to={`/chat/${chat.id}`} className="text-gray-800 font-semibold block py-2 px-4">
+               {chat.name}
+             </Link>
+             <button
+               onClick={() => handleDeleteChat(chat.id)}
+               className="text-gray-500 hover:text-red-700 p-1 hidden group-hover:block"
+             >
+               <FaTrash />
+             </button>
+           </div>
             ))}
           </div>
         </>

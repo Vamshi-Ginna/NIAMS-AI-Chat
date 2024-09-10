@@ -179,7 +179,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
   return (
     <div className="flex flex-col h-full relative">
       <div className="token-info absolute top-0 left-0 m-2 p-2 bg-gray-100 rounded shadow">
-        <span>Current Chat - </span>
+        <span className="font-bold">{chat.name} - </span>
         <span>Tokens: {chat.tokens}</span>
         <span> Cost: ${chat.cost.toFixed(2)}</span>
       </div>

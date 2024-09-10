@@ -37,40 +37,73 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
 
         conversation_history = "\n".join([f"{msg.type.capitalize()}: {msg.content}" for msg in request.history])
 
-        template = """You are a helpful assistant. Answer the question based on the provided context and conversation history. 
-                      If context is empty, use your general knowledge. Do not guess answers. 
-                      If you do not know the answer, say "Not Found".
-                      Context: {context}
-                      Conversation History: {history}
-                      Question: {question}
-                      Answer:"""
+        # template = """You are a helpful assistant. Answer the question based on the provided context and conversation history. 
+        #               Provide a detailed response formatted in list of steps and bullet points
+        #               If context is empty, use your general knowledge. Do not guess answers. 
+        #               If you do not know the answer, say "Not Found".
+        #               Context: {context}
+        #               Conversation History: {history}
+        #               Question: {question}
+        #               Answer:"""
+            
+        template = """You are an advanced AI assistant with expertise in a wide range of topics. Your task is to provide comprehensive, well-structured answers based on the given context, conversation history, and question. Your entire response must be formatted in Markdown. Follow these guidelines:
 
+        1. Markdown Formatting:
+        - Use  Markdown syntax for all formatting. Your entire response should be valid Markdown.
+        - Give appropriate line spacing 
+
+        2. Response Structure:
+        - Begin with a # Heading summarizing your answer (1-2 sentences).
+        - Organize your response into logical sections
+
+        3. Content Guidelines:
+        - Provide detailed explanations, drawing from the context if available, or your general knowledge if not.
+        - Include relevant examples, analogies, or use cases to illustrate your points.
+        - If applicable, mention pros and cons or different perspectives on the topic.
+        - For technical topics, include code snippets in appropriate Markdown code blocks.
+
+        4. Accuracy and Honesty:
+        - Avoid making assumptions or guessing. Clearly state which parts of the question you can and cannot address.
+
+        5. Engagement:
+        - Add a conclusion section whenever required
+        - End your response with a thought-provoking question or suggestion to promote user continue the conversation or ask th user if he has an further questions
+        
+
+        Remember, your entire response must be in valid Markdown format to ensure proper rendering in the user interface.
+
+        Context: {context}
+        Conversation History: {history}
+        Question: {question}
+
+        Markdown Response:
+        """
         prompt = ChatPromptTemplate.from_template(template)
         output_parser = StrOutputParser()
         setup_and_retrieval = RunnableParallel({"context": RunnablePassthrough(), "history": RunnablePassthrough(), "question": RunnablePassthrough()})
         chain = setup_and_retrieval | prompt | create_azure_client() | output_parser
 
-        response = chain.invoke({"context": context_text, "history": conversation_history, "question": request.message})
-
-        source = "OpenAI"
-        if isinstance(response, str):
-            assistant_message = response
-        elif isinstance(response, dict) and "output_text" in response:
-            assistant_message = response["output_text"]
-        else:
-            raise ValueError("Unexpected response format from chain")
-
-        logger.info("assistant_message: %s", assistant_message)
-
-       #if assistant_message == "Not Found":
-        if "not found" in assistant_message.lower():  #checking assistant_message contains a substring called not found (case insensitive)
-            logger.info("Query not found by LLM, invoking Bing Search API.")
+        # Check if the request message contains specific keywords that may require a Bing search
+        keywords = ["latest", "current", "new"]
+        if any(keyword in request.message.lower() for keyword in keywords):
+            logger.info("Keywords detected in message, invoking Bing Search API.")
             bing_response = await search_bing_endpoint(BingSearchRequest(query=request.message))
             formatted_results = "\n\n".join(
                 [f"**{res.title}** - {res.link}\n{res.snippet}" for res in bing_response.results]
             )
             assistant_message = f"Bing Search Results:\n\n{formatted_results}"
             source = "Bing"
+        else:
+            # Proceed with the LLM model if no keywords are detected
+            response = chain.invoke({"context": context_text, "history": conversation_history, "question": request.message})
+
+            source = "OpenAI"
+            if isinstance(response, str):
+                assistant_message = response
+            elif isinstance(response, dict) and "output_text" in response:
+                assistant_message = response["output_text"]
+            else:
+                raise ValueError("Unexpected response format from chain")
 
         user_tokens = calculate_tokens(request.message)
         assistant_tokens = calculate_tokens(assistant_message)
