@@ -177,7 +177,7 @@ async def upload_document(file: UploadFile, req: Request, payload: dict = Depend
         """, (price_id, message_id, cost))
 
         return {
-            "summary": summary_text,
+            "summary": f"Your document '{file.filename}' has been uploaded. If you need any specific sections or details from the document summarized, or expanded upon, please let me know!",
             "tokens": tokens,
             "cost": cost
         }

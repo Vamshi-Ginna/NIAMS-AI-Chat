@@ -143,7 +143,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
               ...c,
               messages: c.messages.map(msg => 
                 msg.isLoading
-                  ? { type: 'assistant', content: `Summary of ${file.name}: ${summary}`, isNew: true }
+                  ? { type: 'assistant', content: `${summary}`, isNew: true }
                   : { ...msg, isNew: false }
               )
             };
