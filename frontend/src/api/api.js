@@ -2,7 +2,11 @@ import axios from 'axios';
 import { msalInstance } from '../index';
 import { loginRequest, tokenRequest } from '../authConfig';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+//const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? process.env.REACT_APP_API_URL || ''
+  : window.env.REACT_APP_API_URL || '';
 
 // Function to get access token
 const getAccessToken = async () => {

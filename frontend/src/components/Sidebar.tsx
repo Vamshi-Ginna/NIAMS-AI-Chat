@@ -79,10 +79,10 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
             <FaComments className="mr-2" />
             {!isCollapsed && <span>Chat</span>}
           </div>
-          <div className="text-blue-500 font-semibold hover:bg-gray-100 flex items-center py-3 px-4 cursor-pointer" onClick={handleChatClick}>
+          {/* <div className="text-blue-500 font-semibold hover:bg-gray-100 flex items-center py-3 px-4 cursor-pointer" onClick={handleChatClick}>
             <FaBook className="mr-2" />
             {!isCollapsed && <span>Interactive Knowledge Base</span>}
-          </div>
+          </div> */}
         </div>
       </nav>
       {!isCollapsed && (

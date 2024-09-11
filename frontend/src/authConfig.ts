@@ -4,19 +4,19 @@ import { Configuration, LogLevel } from "@azure/msal-browser";
 // Check if the app is running in production or development
 const clientId = process.env.NODE_ENV === 'development'
   ? process.env.REACT_APP_AZURE_AD_CLIENT_ID || ''
-  : window.config.REACT_APP_AZURE_AD_CLIENT_ID || '';
+  : window.env.REACT_APP_AZURE_AD_CLIENT_ID || '';
 
 const authority = process.env.NODE_ENV === 'development'
   ? process.env.REACT_APP_AZURE_AD_AUTHORITY || ''
-  : window.config.REACT_APP_AZURE_AD_AUTHORITY || '';
+  : window.env.REACT_APP_AZURE_AD_AUTHORITY || '';
 
 const redirectUri = process.env.NODE_ENV === 'development'
   ? process.env.REACT_APP_AZURE_AD_REDIRECT_URI || ''
-  : window.config.REACT_APP_AZURE_AD_REDIRECT_URI || '';
+  : window.env.REACT_APP_AZURE_AD_REDIRECT_URI || '';
 
 const scopes = process.env.NODE_ENV === 'development'
   ? process.env.REACT_APP_AZURE_AD_SCOPES || ''
-  : window.config.REACT_APP_AZURE_AD_SCOPES || '';
+  : window.env.REACT_APP_AZURE_AD_SCOPES || '';
 
 
 export const msalConfig: Configuration = {
