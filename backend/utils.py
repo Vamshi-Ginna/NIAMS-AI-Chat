@@ -23,7 +23,7 @@ def calculate_tokens(text):
     encoding = tiktoken.get_encoding('cl100k_base')
     return len(encoding.encode(text))
 
-def create_azure_client(temperature: float = 0.5):
+def create_azure_client(temperature: float = 0.7):
     llm = AzureChatOpenAI(
         azure_endpoint=Config.AZURE_OPENAI_API_ENDPOINT,
         api_key=Config.AZURE_OPENAI_API_KEY,

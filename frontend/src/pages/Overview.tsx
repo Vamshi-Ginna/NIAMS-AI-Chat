@@ -1,35 +1,138 @@
 import React from 'react';
+import { FiAlertTriangle, FiChevronRight, FiBookOpen, FiMessageCircle, FiRepeat, FiUserCheck, FiCpu, FiInfo } from 'react-icons/fi';
 
 const Overview: React.FC = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Overview</h1>
-      <p>
-        This platform is designed to deliver a secure and private experience when interacting with GPT artificial intelligence models for <b>LCG INC.</b>
-        <br /><br />
-        Azure OpenAI service brings the advanced capabilities of OpenAI's artificial intelligence models, including the renowned GPT (Generative Pre-trained Transformer) technology, to users within a secure and compliant cloud environment. Specifically tailored for U.S. government agencies and their partners, this service adheres to the <b>Federal Risk and Authorization Management Program (FedRAMP)</b> standards, ensuring that it meets strict security and compliance requirements.
-        <br />
-        This means you can leverage the power of AI for a variety of applications—ranging from natural language processing, machine learning tasks, to generating human-like text responses—within a framework that prioritizes the protection of sensitive information. This integration combines the innovative AI capabilities of OpenAI with Azure's robust cloud infrastructure, offering a powerful tool for enhancing efficiency, innovation, and decision-making processes, all while maintaining high standards of security and compliance.
-        <br /><br />
-      </p>
-      <hr />
-      <h2 className="text-xl font-bold">Prompts & Interactions</h2>
-      <p>
-        You can ask a broad spectrum of questions and engage in various types of interactions such as:
-      </p>
-      <ul>
-        <li><b>Text Summarization:</b> Request the AI to summarize long articles, research papers, or documents, providing you with concise overviews of the content.</li>
-        <li><b>Creative Content Generation:</b> Ask the AI to craft stories, compose emails, generate ideas for projects, or even write poetry on topics of your choice.</li>
-        <li><b>Language Translations:</b> Inquire about translating phrases, sentences, or paragraphs from one language to another, facilitating communication across language barriers.</li>
-        <li><b>Simulating Specific Personas:</b> Engage in dialogues with the AI where it simulates historical figures, experts in specific fields, or fictional characters, offering unique perspectives and insights.</li>
-        <li><b>Engaging in Technical Dialogues:</b> Pose technical or specialized questions related to your field of work or study, such as queries about neurological research, data analysis techniques, or the latest advancements in AI and technology.</li>
-        <li><b>Instructional Guidance:</b> Seek instructions or step-by-step guidance on processes, whether they're related to software use, experimental protocols, or troubleshooting technical issues.</li>
-        <li><b>General Knowledge and Trivia:</b> Ask questions about general knowledge, trivia, or facts on a wide range of topics, from science and history to pop culture and sports.</li>
-      </ul>
-      <p>
-        It's important to note that while the platform can handle a diverse array of queries, the quality and accuracy of responses may vary based on the complexity of the question and the specific knowledge programmed into the AI models.
-        <br /><br />
-      </p>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-5xl mx-auto">
+        <div className="p-8">
+         {/* Overview Section - Blended with Background */}
+         <h1 className="text-3xl font-bold mb-6 text-gray-800">Overview of the NIAMS Artificial Intelligence (AI) Chat</h1>
+          <p className="text-gray-600 mb-6">
+          The NIAMS AI Chatbot (AI Chat) pilot, aims to establish a secure and private environment and experience for NIAMS staff when interacting with LLM artificial intelligence (AI) models. The focus is to help NIAMS staff understand how to leverage AI as part of their daily tasks and help NIAMS understand the associated costs.  Leveraging the Microsoft Azure OpenAI service brings the advanced capabilities of OpenAI's artificial intelligence models, including the renowned GPT (Generative Pre-trained Transformer) technology, to NIAMS staff within a secure and compliant cloud environment. Specifically tailored for U.S. government agencies and their partners, this service adheres to the <b>Federal Risk and Authorization Management Program (FedRAMP)</b> standards, ensuring that it meets strict security and compliance requirements.
+          <br /><br />
+          By establishing the secured NIAMS AI platform (which the NIAMS AI Chat uses), this platform can be leveraged for other use cases in the future. This platform allows NIAMS to leverage the power of AI for a variety of applications—ranging from natural language processing, machine learning tasks, to generating human-like text responses—within a framework that prioritizes the protection of sensitive information. This integration combines the innovative AI capabilities of OpenAI with Azure's robust cloud infrastructure, offering a powerful tool for enhancing efficiency, innovation, and decision-making processes, all while maintaining high standards of security and compliance
+           <br /><br />
+           It's important to note that while the NIAMS AI Chat can handle a diverse array of queries, the quality and accuracy of responses may vary based on the complexity of the question and the specific knowledge programmed into the AI models. Each user is responsible for ensuring the accuracy, completeness, and relevance of any output generated by the NIAMS AI Chat and how the generated output is used.
+           </p>
+           <div className="bg-red-50 p-4 rounded-md border-l-4 border-red-500 mt-6">
+          <div className="flex items-start">
+            <FiAlertTriangle className="text-red-600 text-2xl mr-3" />
+            <div>
+              <p className="text-gray-700">
+                <strong>Please note:</strong> Responses from this tool may be inaccurate (hallucinations), outdated, incomplete, or not aligned to your specific needs. Each user should always independently understand and verify that the content generated is accurate in your specific context and suitable for your use. 
+                Each user is recommended to review other sources of information to verify the accuracy of the generated content. Please make any necessary edits before sharing the output from this tool.
+              </p>
+             
+            </div>
+          </div>
+        </div>
+        <br></br>
+
+          {/* Limitation Alert - Blended */}
+          <div className="bg-yellow-50 p-4 rounded-md border-l-4 border-yellow-500 mb-6">
+            <div className="flex items-start">
+              <FiAlertTriangle className="text-yellow-600 text-2xl mr-3" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700">Current Limitations of Document Upload</h3>
+                <p className="text-gray-600 mt-1">
+                  The platform currently supports files such as <i>.pdf, .json, .docx, .txt, .md,</i> and <i>.xml</i>, but does not support <i>.pptx,</i> video files, <i>.xlsx,</i> images, or <i>.csv</i> files.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Prompts & Interactions Section */}
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Prompts & Interactions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            {/* Text Summarization Card */}
+            <div className="bg-blue-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
+              <div className="flex items-center">
+                <FiBookOpen className="text-blue-600 text-3xl mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Text Summarization</h3>
+              </div>
+              <p className="text-gray-600 mt-4">
+                Ask the AI to summarize long articles, research papers, or documents into concise overviews.
+              </p>
+              <button className="mt-4 text-blue-600 flex items-center font-semibold hover:underline">
+                Try it now <FiChevronRight className="ml-2" />
+              </button>
+            </div>
+
+            {/* Creative Content Generation Card */}
+            <div className="bg-green-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
+              <div className="flex items-center">
+                <FiMessageCircle className="text-green-600 text-3xl mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Creative Content Generation</h3>
+              </div>
+              <p className="text-gray-600 mt-4">
+                Generate stories, compose emails, or brainstorm project ideas with the AI's creative assistance.
+              </p>
+              <button className="mt-4 text-green-600 flex items-center font-semibold hover:underline">
+                Try it now <FiChevronRight className="ml-2" />
+              </button>
+            </div>
+
+            {/* Language Translations Card */}
+            <div className="bg-yellow-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
+              <div className="flex items-center">
+                <FiRepeat className="text-yellow-600 text-3xl mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Language Translations</h3>
+              </div>
+              <p className="text-gray-600 mt-4">
+                Translate text between languages to facilitate communication across language barriers.
+              </p>
+              <button className="mt-4 text-yellow-600 flex items-center font-semibold hover:underline">
+                Try it now <FiChevronRight className="ml-2" />
+              </button>
+            </div>
+
+            {/* Simulating Personas Card */}
+            <div className="bg-purple-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
+              <div className="flex items-center">
+                <FiUserCheck className="text-purple-600 text-3xl mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Simulating Personas</h3>
+              </div>
+              <p className="text-gray-600 mt-4">
+                Engage with the AI as it simulates experts, historical figures, or fictional characters.
+              </p>
+              <button className="mt-4 text-purple-600 flex items-center font-semibold hover:underline">
+                Try it now <FiChevronRight className="ml-2" />
+              </button>
+            </div>
+
+            {/* Technical Dialogues Card */}
+            <div className="bg-red-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
+              <div className="flex items-center">
+                <FiCpu className="text-red-600 text-3xl mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Engaging in Technical Dialogues</h3>
+              </div>
+              <p className="text-gray-600 mt-4">
+                Ask specialized or technical questions related to research, AI, or other fields.
+              </p>
+              <button className="mt-4 text-red-600 flex items-center font-semibold hover:underline">
+                Try it now <FiChevronRight className="ml-2" />
+              </button>
+            </div>
+
+            {/* General Knowledge Card */}
+            <div className="bg-teal-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
+              <div className="flex items-center">
+                <FiInfo className="text-teal-600 text-3xl mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">General Knowledge & Trivia</h3>
+              </div>
+              <p className="text-gray-600 mt-4">
+                Ask questions on a wide range of topics, from science and history to pop culture and sports.
+              </p>
+              <button className="mt-4 text-teal-600 flex items-center font-semibold hover:underline">
+                Try it now <FiChevronRight className="ml-2" />
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
