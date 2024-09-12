@@ -109,19 +109,24 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
   };
 
   const handleFileChange = async (file: File) => {
+    const allowedExtensions = ['pdf', 'json', 'docx', 'txt', 'md', 'xml']; // Supported file extensions
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || ""; // Get file extension
+  
     if (file && chat) {
-      const message = `Generating File Summary for ${file.name}`;
+      // First display the user's message: "File: <file name>"
+      const userMessage = `File: ${file.name}`;
       const updatedChats = chats.map(c => {
         if (c.id === chat.id) {
           return {
             ...c,
-            messages: [...c.messages, { type: 'user', content: message, isNew: true }]
+            messages: [...c.messages, { type: 'user', content: userMessage, isNew: true }]
           };
         }
         return c;
       });
       setChats(updatedChats);
-
+  
+      // Display loading state for the assistant's response
       const updatedChatsWithLoading = updatedChats.map(c => {
         if (c.id === chat.id) {
           return {
@@ -132,44 +137,67 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
         return c;
       });
       setChats(updatedChatsWithLoading);
-
+  
       setIsLoading(true);
-
-      try {
-        const summary = await summarizeFile(file);
-        const updatedChatsWithResponse = updatedChatsWithLoading.map(c => {
+  
+      // Check if the file type is valid
+      if (allowedExtensions.includes(fileExtension)) {
+        try {
+          // If the file type is valid, process the file and get the summary
+          const summary = await summarizeFile(file);
+          const updatedChatsWithResponse = updatedChatsWithLoading.map(c => {
+            if (c.id === chat.id) {
+              return {
+                ...c,
+                messages: c.messages.map(msg =>
+                  msg.isLoading
+                    ? { type: 'assistant', content: `${summary}`, isNew: true }
+                    : { ...msg, isNew: false }
+                )
+              };
+            }
+            return c;
+          });
+          setChats(updatedChatsWithResponse);
+        } catch (error) {
+          // If there is an error during file processing, display an error message
+          const updatedChatsWithError = updatedChatsWithLoading.map(c => {
+            if (c.id === chat.id) {
+              return {
+                ...c,
+                messages: c.messages.map(msg =>
+                  msg.isLoading ? { type: 'assistant', content: 'Error: Unable to fetch summary', isNew: false } : msg
+                )
+              };
+            }
+            return c;
+          });
+          setChats(updatedChatsWithError);
+          console.error('Error summarizing file:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // If the file type is invalid, display an error message
+        const errorMessage = `Invalid file type: ${file.name}. Please upload a valid file of type: .pdf, .json, .docx, .txt, .md, or .xml.`;
+        const updatedChatsWithError = updatedChatsWithLoading.map(c => {
           if (c.id === chat.id) {
             return {
               ...c,
-              messages: c.messages.map(msg => 
+              messages: c.messages.map(msg =>
                 msg.isLoading
-                  ? { type: 'assistant', content: `${summary}`, isNew: true }
+                  ? { type: 'assistant', content: errorMessage, isNew: true }
                   : { ...msg, isNew: false }
               )
             };
           }
           return c;
         });
-        setChats(updatedChatsWithResponse);
-      } catch (error) {
-        const updatedChatsWithError = updatedChatsWithLoading.map(c => {
-          if (c.id === chat.id) {
-            return {
-              ...c,
-              messages: c.messages.map(msg =>
-                msg.isLoading ? { type: 'assistant', content: 'Error: Unable to fetch summary', isNew: false } : msg
-              )
-            };
-          }
-          return c;
-        });
         setChats(updatedChatsWithError);
-        console.error('Error summarizing file:', error);
-      } finally {
-        setIsLoading(false);
       }
     }
   };
+  
 
   const handleThumbsDown = (message: string) => {
     console.log('Thumbs down clicked for message:', message);

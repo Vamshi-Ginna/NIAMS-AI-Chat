@@ -3,6 +3,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts.prompt import PromptTemplate
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader
+import json
 import tempfile
 import io, os, logging
 from pypdf import PdfReader
@@ -16,6 +17,7 @@ from typing import List
 from langchain.chains.summarize import load_summarize_chain
 from config import Config
 import tiktoken
+import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +93,27 @@ def summarize(file):
         temp_path = temp.name
     temp.close()
 
-    if extension == '.pdf':  
+   # Process based on file type
+    if extension == '.pdf':
         loader = PyPDFLoader(temp_path)
         docs = loader.load_and_split()
     elif extension == '.docx':
         loader = Docx2txtLoader(temp_path)
         docs = loader.load_and_split()
+    elif extension == '.txt' or extension == '.md':
+        with open(temp_path, 'r') as f:
+            content = f.read()
+        docs = [Document(page_content=content)]
+    elif extension == '.json':
+        with open(temp_path, 'r') as f:
+            json_content = json.load(f)
+        content = json.dumps(json_content, indent=2)  # Convert JSON to readable string
+        docs = [Document(page_content=content)]
+    elif extension == '.xml':
+        tree = ET.parse(temp_path)
+        root = tree.getroot()
+        content = ET.tostring(root, encoding='unicode')  # Convert XML to string
+        docs = [Document(page_content=content)]
     else:
         raise ValueError("Unsupported file type")
 
