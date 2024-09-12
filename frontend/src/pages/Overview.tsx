@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiAlertTriangle, FiChevronRight, FiBookOpen, FiMessageCircle, FiRepeat, FiUserCheck, FiCpu, FiInfo } from 'react-icons/fi';
+import PromptsAndInteractions from '../components/PromptsAndInteractions';
 
 const Overview: React.FC = () => {
   return (
@@ -40,96 +41,6 @@ const Overview: React.FC = () => {
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Prompts & Interactions Section */}
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Prompts & Interactions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Text Summarization Card */}
-            <div className="bg-blue-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
-              <div className="flex items-center">
-                <FiBookOpen className="text-blue-600 text-3xl mr-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Text Summarization</h3>
-              </div>
-              <p className="text-gray-600 mt-4">
-                Ask the AI to summarize long articles, research papers, or documents into concise overviews.
-              </p>
-              <button className="mt-4 text-blue-600 flex items-center font-semibold hover:underline">
-                Try it now <FiChevronRight className="ml-2" />
-              </button>
-            </div>
-
-            {/* Creative Content Generation Card */}
-            <div className="bg-green-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
-              <div className="flex items-center">
-                <FiMessageCircle className="text-green-600 text-3xl mr-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Creative Content Generation</h3>
-              </div>
-              <p className="text-gray-600 mt-4">
-                Generate stories, compose emails, or brainstorm project ideas with the AI's creative assistance.
-              </p>
-              <button className="mt-4 text-green-600 flex items-center font-semibold hover:underline">
-                Try it now <FiChevronRight className="ml-2" />
-              </button>
-            </div>
-
-            {/* Language Translations Card */}
-            <div className="bg-yellow-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
-              <div className="flex items-center">
-                <FiRepeat className="text-yellow-600 text-3xl mr-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Language Translations</h3>
-              </div>
-              <p className="text-gray-600 mt-4">
-                Translate text between languages to facilitate communication across language barriers.
-              </p>
-              <button className="mt-4 text-yellow-600 flex items-center font-semibold hover:underline">
-                Try it now <FiChevronRight className="ml-2" />
-              </button>
-            </div>
-
-            {/* Simulating Personas Card */}
-            <div className="bg-purple-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
-              <div className="flex items-center">
-                <FiUserCheck className="text-purple-600 text-3xl mr-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Simulating Personas</h3>
-              </div>
-              <p className="text-gray-600 mt-4">
-                Engage with the AI as it simulates experts, historical figures, or fictional characters.
-              </p>
-              <button className="mt-4 text-purple-600 flex items-center font-semibold hover:underline">
-                Try it now <FiChevronRight className="ml-2" />
-              </button>
-            </div>
-
-            {/* Technical Dialogues Card */}
-            <div className="bg-red-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
-              <div className="flex items-center">
-                <FiCpu className="text-red-600 text-3xl mr-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Engaging in Technical Dialogues</h3>
-              </div>
-              <p className="text-gray-600 mt-4">
-                Ask specialized or technical questions related to research, AI, or other fields.
-              </p>
-              <button className="mt-4 text-red-600 flex items-center font-semibold hover:underline">
-                Try it now <FiChevronRight className="ml-2" />
-              </button>
-            </div>
-
-            {/* General Knowledge Card */}
-            <div className="bg-teal-50 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 ease-in-out">
-              <div className="flex items-center">
-                <FiInfo className="text-teal-600 text-3xl mr-3" />
-                <h3 className="text-lg font-semibold text-gray-800">General Knowledge & Trivia</h3>
-              </div>
-              <p className="text-gray-600 mt-4">
-                Ask questions on a wide range of topics, from science and history to pop culture and sports.
-              </p>
-              <button className="mt-4 text-teal-600 flex items-center font-semibold hover:underline">
-                Try it now <FiChevronRight className="ml-2" />
-              </button>
-            </div>
-
           </div>
         </div>
       </div>

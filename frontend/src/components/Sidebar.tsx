@@ -53,72 +53,88 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
     //}
     }
   };
-
   return (
-    <div className={`bg-white shadow-md ${isCollapsed ? 'w-16' : 'w-64'} h-full relative transition-width duration-300 bg-gray-gradient`}>
-      <div className="p-6 flex justify-between items-center">
-        <button onClick={toggleSidebar} className="text-gray-800">
-          <FaBars />
+    <div className={`bg-pinkish shadow-lg ${isCollapsed ? 'w-16' : 'w-64'} h-full relative transition-all duration-300 ease-in-out`}>
+      <div className="p-6 flex justify-between items-center border-b border-pinkish_dark">
+        <button onClick={toggleSidebar} className="text-white hover:text-custom_blue transition-colors duration-300">
+          {isCollapsed ? <FaBars /> : <FaTimes />}
         </button>
         {!isCollapsed && (
-        <div className="bg-white p-2 rounded-lg shadow-md">
-        <img 
-          src="/niams_logo.jpg" 
-          alt="Logo" 
-          className="h-8 w-auto mx-auto" 
-        />
-      </div>)}
+          <div className="bg-white p-2 rounded-lg shadow-md">
+            <img 
+              src="/niams_logo.jpg" 
+              alt="Logo" 
+              className="h-8 w-auto mx-auto"
+            />
+          </div>
+        )}
       </div>
+  
       <nav className="mt-6">
         <div className="flex flex-col">
-          <Link to="/" className="text-blue-500 font-semibold hover:bg-gray-100 flex items-center py-3 px-4">
+          <Link to="/" className="text-black font-semibold hover:bg-pinkish_dark hover:text-white flex items-center py-3 px-4 rounded-md transition-colors duration-300">
             <FaInfoCircle className="mr-2" />
             {!isCollapsed && <span>Overview</span>}
           </Link>
-          <div className="text-blue-500 font-semibold hover:bg-gray-100 flex items-center py-3 px-4 cursor-pointer" onClick={handleChatClick}>
+          <div onClick={handleChatClick} className="text-black font-semibold hover:bg-pinkish_dark hover:text-white flex items-center py-3 px-4 cursor-pointer rounded-md transition-colors duration-300">
             <FaComments className="mr-2" />
             {!isCollapsed && <span>Chat</span>}
           </div>
-          {/* <div className="text-blue-500 font-semibold hover:bg-gray-100 flex items-center py-3 px-4 cursor-pointer" onClick={handleChatClick}>
-            <FaBook className="mr-2" />
-            {!isCollapsed && <span>Interactive Knowledge Base</span>}
-          </div> */}
         </div>
       </nav>
+  
       {!isCollapsed && (
         <>
-          <hr className="my-2" />
+          <hr className="my-2 border-pinkish_dark" />
           <div className="p-4">
-            <button onClick={startNewChat} className="w-full bg-blue-500 text-white p-2 rounded mb-4">
-              Start New Chat
-            </button>
-            <div className="mt-4">
-              <span className="block text-gray-800 font-semibold text-xs">Logged in as: {userName}</span>
-            </div>
-            <div className="mt-4">
-              <span className="block text-gray-800 font-semibold text-sm">Total Tokens for this session: {totalTokens}</span>
-              <span className="block text-gray-800 font-semibold text-sm">Total Cost for this session: ${totalCost.toFixed(2)}</span>
+          <button onClick={startNewChat} className="w-full bg-white text-black font-bold p-3 rounded-lg hover:bg-pinkish_dark hover:text-white transition-colors duration-300 shadow-md">
+            Start New Chat
+          </button>
+
+            <div className="mt-4 text-gray-100">
+              <span className="block text-black font-semibold text-sm">Logged in as: {userName}</span>
+              <span className="block text-black font-semibold text-sm mt-2">Total Tokens for this session: {totalTokens}</span>
+              <span className="block text-black font-semibold text-sm">Total Cost for this session: ${totalCost.toFixed(2)}</span>
             </div>
           </div>
           <div className="p-4">
-            {chats.map((chat, index) => (
-             <div key={chat.id} className="flex justify-between items-center hover:bg-gray-100 group">
-             <Link to={`/chat/${chat.id}`} className="text-gray-800 font-semibold block py-2 px-4">
-               {chat.name}
-             </Link>
-             <button
-               onClick={() => handleDeleteChat(chat.id)}
-               className="text-gray-500 hover:text-red-700 p-1 hidden group-hover:block"
-             >
-               <FaTrash />
-             </button>
-           </div>
-            ))}
-          </div>
+  {chats.map((chat) => (
+    <div key={chat.id} className="relative flex justify-between items-center group hover:bg-pinkish_dark hover:text-white rounded-md transition-colors duration-300">
+      
+      <Link 
+        to={`/chat/${chat.id}`} 
+        className="absolute inset-0 z-10"
+        aria-label={`Chat ${chat.name}`}
+      ></Link>
+      
+      {/* The chat name is now clickable */}
+      <div className="relative z-20 font-semibold block py-2 px-4 pointer-events-none">
+        <Link to={`/chat/${chat.id}`} className="pointer-events-auto">
+          {chat.name}
+        </Link>
+      </div>
+      
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent the link click when clicking delete
+          handleDeleteChat(chat.id);
+        }}
+        className="relative z-20 text-gray-300 hover:text-red-700 p-1 hidden group-hover:block transition-colors duration-300"
+      >
+        <FaTrash />
+      </button>
+    </div>
+  ))}
+</div>
+
+
+
         </>
       )}
     </div>
   );
+  
+  
 };
 
 export default Sidebar;

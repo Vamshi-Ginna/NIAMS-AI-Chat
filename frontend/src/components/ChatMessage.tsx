@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaRegUser } from 'react-icons/fa';
-import { MdOutlineFeedback } from "react-icons/md";
-import { RiRobot2Line } from "react-icons/ri";
-import { MdContentCopy } from "react-icons/md";
+import { MdOutlineFeedback, MdContentCopy, MdCheck } from 'react-icons/md'; // Added MdCheck for tick mark
+import { RiRobot2Line } from 'react-icons/ri';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -13,14 +12,14 @@ interface ChatMessageProps {
   message: any;
   type: string;
   isLoading?: boolean;
-  isNew: boolean; // Added isNew as required
+  isNew: boolean;
   onThumbsDown: (message: string) => void;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isNew, onThumbsDown }) => {
   const [displayedMessage, setDisplayedMessage] = useState<string>(isNew ? '' : message.content);
   const [copied, setCopied] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
 
   useEffect(() => {
     if (isNew && !isLoading) {
@@ -44,7 +43,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(displayedMessage);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+
+    // Automatically revert back to copy icon after 2 seconds
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
   };
 
   const handleThumbsDown = () => {
@@ -56,15 +59,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
     // Trigger backend function to save the feedback
   };
 
-  const messageStyle = type === 'user' ? 'bg-blue-200' : 'bg-green-200';
+  const messageStyle = type === 'user' ? 'bg-gray-200 text-black': 'bg-custom_blue text-white' ;
 
   return (
-    <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
-      <div className="flex items-center space-x-2">
-        <div className="flex-shrink-0 icon-size">
-          {type === 'user' ? <FaRegUser /> : <RiRobot2Line />}
+    <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div className="flex items-start space-x-2">
+        <div className="flex-shrink-0">
+          {type === 'user' ? (
+            <FaRegUser className="text-blue-500" size={24} />
+          ) : (
+            <RiRobot2Line className="text-green-500" size={24} />
+          )}
         </div>
-        <div className={`rounded p-2 ${messageStyle} chat-bubble`}>
+        <div className={`rounded-lg p-4 ${messageStyle} shadow-md`}>
           {isLoading ? (
             <span className="animate-pulse">...</span>
           ) : (
@@ -102,28 +109,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
                 {displayedMessage}
               </ReactMarkdown>
               {type === 'assistant' && (
-                <div className="flex justify-end mt-2 space-x-2">
-                  <MdContentCopy className="cursor-pointer" onClick={handleCopyToClipboard} />
-                  <MdOutlineFeedback className="cursor-pointer" onClick={() => setIsFeedbackOpen(true)} />
+                <div className="flex justify-end mt-2 space-x-4">
+                  {/* Show tick mark when copied, else show copy icon */}
+                  {copied ? (
+                    <MdCheck className="text-white-500" size={20} />
+                  ) : (
+                    <MdContentCopy className="cursor-pointer hover:text-gray-600" onClick={handleCopyToClipboard} size={20} />
+                  )}
+                  <MdOutlineFeedback className="cursor-pointer hover:text-gray-600" onClick={() => setIsFeedbackOpen(true)} size={20} />
                 </div>
               )}
             </>
           )}
         </div>
       </div>
-      {copied && (
-        <div className="copied-popup bg-white text-black rounded-lg p-2 mt-2">
-          Copied
-        </div>
-      )}
       {isFeedbackOpen && (
         <FeedbackPopup
-           onClose={() => setIsFeedbackOpen(false)}
-           onSubmit={handleFeedbackSubmit}
-           messageId={message.message_id} // Pass the message_id to FeedbackPopup
+          onClose={() => setIsFeedbackOpen(false)}
+          onSubmit={handleFeedbackSubmit}
+          messageId={message.message_id} // Pass the message_id to FeedbackPopup
         />
       )}
-
     </div>
   );
 };

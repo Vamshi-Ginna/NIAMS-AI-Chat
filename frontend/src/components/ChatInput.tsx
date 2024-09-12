@@ -9,7 +9,6 @@ interface ChatInputProps {
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, onFileChange }) => {
   const [input, setInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -44,10 +43,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, onFileChange }) =>
   }, [input]);
 
   return (
-    <div>
-      <div className="flex items-center p-2 border-t border-gray-200">
-        <button onClick={() => fileInputRef.current?.click()} className="p-1">
-          <FaPaperclip />
+    <div className="p-3 bg-gray-100 border-t border-gray-200">
+      <div className="flex items-center bg-white rounded-lg shadow-md p-2">
+        {/* Attachment Button */}
+        <button 
+          onClick={() => fileInputRef.current?.click()} 
+          className="p-2 text-gray-600 hover:text-blue-500 transition-colors"
+        >
+          <FaPaperclip size={18} />
         </button>
         <input
           type="file"
@@ -55,9 +58,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, onFileChange }) =>
           style={{ display: 'none' }}
           onChange={handleFileChange}
         />
+
+        {/* Text Area */}
         <textarea
           ref={textareaRef}
-          className="flex-1 border rounded p-1 resize-none overflow-y-auto ml-2"
+          className="flex-1 border rounded-lg p-2 ml-3 resize-none overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
@@ -65,11 +70,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, onFileChange }) =>
           rows={1}
           style={{ maxHeight: '168px' }} // 7 lines * 24px line height
         />
-        <button onClick={handleSendMessage} className="ml-2 p-1 bg-blue-500 text-white rounded">
+
+        {/* Send Button */}
+        <button 
+          onClick={handleSendMessage} 
+          className="ml-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+        >
           Send
         </button>
       </div>
-      <div className="text-center text-sm text-gray-500 mt-1">
+
+      {/* Disclaimer */}
+      <div className="text-center text-sm text-gray-500 mt-2">
         Disclaimer: This Secure AI Chat workspace is not used to train ChatGPT models. LCG Secure AI Chat can make mistakes.
       </div>
     </div>

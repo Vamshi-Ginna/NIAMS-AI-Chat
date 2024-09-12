@@ -5,10 +5,13 @@ module.exports = {
       "./public/index.html",
     ],
     theme: {
-      extend: { colors: {
-        pinkish: '#ff9ff3',
-        custom_blue: "#7dcaeb"
-      },},
+      extend: {
+         colors: {
+        pinkish: '#d0b8f9',
+        pinkish_dark:"#7128eb",
+        custom_blue: "#7da5ca"
+      },
+    },
     },
     plugins: [],
   };  
