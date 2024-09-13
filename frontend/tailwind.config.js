@@ -9,7 +9,7 @@ module.exports = {
          colors: {
         pinkish: '#d0b8f9',
         pinkish_dark:"#7128eb",
-        custom_blue: "#7da5ca"
+        custom_blue: "#c4d5fb"
       },
     },
     },

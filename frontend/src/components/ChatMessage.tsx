@@ -59,7 +59,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
     // Trigger backend function to save the feedback
   };
 
-  const messageStyle = type === 'user' ? 'bg-gray-200 text-black': 'bg-custom_blue text-white' ;
+  const messageStyle = type === 'user' ? 'bg-gray-200 text-black': 'bg-custom_blue text-black' ;
 
   return (
     <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>

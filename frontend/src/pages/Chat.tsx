@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ChatInput from '../components/ChatInput';
 import ChatMessage from '../components/ChatMessage';
 import { sendMessage, summarizeFile } from '../api/api';
-import PromptsAndInteractions from '../components/PromptsAndInteractions'; 
+import PromptsAndInteractions from '../components/PromptsAndInteractions';
 
 interface Message {
   type: string;
@@ -14,8 +14,8 @@ interface Message {
 }
 
 interface ChatProps {
-  chats: { id: string; name: string; messages: Message[], tokens: number, cost: number }[];
-  setChats: React.Dispatch<React.SetStateAction<{ id: string; name: string; messages: Message[], tokens: number, cost: number }[]>>;
+  chats: { id: string; name: string; messages: Message[], tokens: number, cost: number, showPrompts: boolean }[];
+  setChats: React.Dispatch<React.SetStateAction<{ id: string; name: string; messages: Message[], tokens: number, cost: number, showPrompts: boolean }[]>>;
 }
 
 const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
@@ -23,7 +23,6 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
   const navigate = useNavigate();
   const chat = chats.find(chat => chat.id === id);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPrompts, setShowPrompts] = useState(true); // State to control showing the prompts
 
   // Initialize a new chat if no chat is found or the current chat is invalid
   useEffect(() => {
@@ -33,7 +32,8 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
         name: `Chat ${chats.length + 1}`,
         messages: [],
         tokens: 0,
-        cost: 0
+        cost: 0,
+        showPrompts: true // Show prompts initially for new chat
       };
       setChats([...chats, newChat]);
       navigate(`/chat/${newChat.id}`);
@@ -47,13 +47,12 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
 
   // Function to handle sending messages
   const handleSendMessage = async (message: string) => {
-    setShowPrompts(false); // Hide prompts once the user sends a message
-    setIsLoading(true);
     const updatedChats = chats.map(chat => {
       if (chat.id === id) {
         return {
           ...chat,
-          messages: [...chat.messages, { type: 'user', content: message, isNew: true }]
+          messages: [...chat.messages, { type: 'user', content: message, isNew: true }],
+          showPrompts: false // Hide prompts when a message is sent
         };
       }
       return chat;
@@ -201,20 +200,18 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
 
   return (
     <div className="bg-gray-100 flex flex-col h-full relative">
-      <div className="token-info absolute top-0 left-0 m-2 p-2 bg-gray-100 rounded shadow">
+      <div className="token-info absolute top-0 left-0 m-2 p-2 bg-gray-100 bg-opacity-80 rounded shadow">
         <span className="font-bold">{chat.name} - </span>
         <span>Tokens: {chat.tokens}</span>
         <span> Cost: ${chat.cost.toFixed(2)}</span>
       </div>
    
       {/* Center the PromptsAndInteractions */}
-      {showPrompts && (
+      {chat.showPrompts && (
         <div className="flex flex-1 items-center justify-center">
-         <PromptsAndInteractions onCardClick={(message: string) => handleSendMessage(message)} />
-
+          <PromptsAndInteractions onCardClick={(message: string) => handleSendMessage(message)} />
         </div>
       )}
-
 
       {/* Chat Messages Section */}
       <div className="flex-1 overflow-y-auto p-4">

@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaBars, FaInfoCircle, FaComments, FaBook, FaTimes, FaTrash  } from 'react-icons/fa';
 
 interface SidebarProps {
-  chats: { id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[];
-  setChats: React.Dispatch<React.SetStateAction<{ id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[]>>;
-  userName: string; // Added userName prop
+  chats: { id: string; name: string; messages: { type: string; content: string }[]; tokens: number; cost: number; showPrompts: boolean }[];
+  setChats: React.Dispatch<React.SetStateAction<{ id: string; name: string; messages: { type: string; content: string }[]; tokens: number; cost: number; showPrompts: boolean }[]>>;
+  userName: string;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
@@ -25,7 +25,8 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
       name: `Chat ${chats.length + 1}`,
       messages: [],
       tokens: 0,
-      cost: 0
+      cost: 0,
+      showPrompts: true
     };
     setChats([...chats, newChat]);
     navigate(`/chat/${newChat.id}`);
@@ -55,20 +56,21 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
   };
   return (
     <div className={`bg-pinkish shadow-lg ${isCollapsed ? 'w-16' : 'w-64'} h-full relative transition-all duration-300 ease-in-out`}>
-      <div className="p-6 flex justify-between items-center border-b border-pinkish_dark">
+      <div className="p-6 flex justify-between items-center ">
         <button onClick={toggleSidebar} className="text-white hover:text-custom_blue transition-colors duration-300">
           {isCollapsed ? <FaBars /> : <FaTimes />}
         </button>
-        {!isCollapsed && (
+      </div>
+
+      {!isCollapsed && (
           <div className="bg-white p-2 rounded-lg shadow-md">
             <img 
               src="/niams_logo.jpg" 
               alt="Logo" 
-              className="h-8 w-auto mx-auto"
+              className="h-12 w-auto mx-auto"
             />
           </div>
         )}
-      </div>
   
       <nav className="mt-6">
         <div className="flex flex-col">

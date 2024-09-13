@@ -11,7 +11,10 @@ import { loginUser } from './api/api';
 
 const App: React.FC = () => {
   const { instance, accounts } = useMsal();
-  const [chats, setChats] = React.useState<{ id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number }[]>([]);
+  
+  // Update the chats state to include showPrompts field
+  const [chats, setChats] = React.useState<{ id: string; name: string; messages: { type: string; content: string }[], tokens: number, cost: number, showPrompts: boolean }[]>([]);
+  
   const userName = accounts.length > 0 ? accounts[0].name ?? "Guest" : "Guest";
 
   useEffect(() => {
