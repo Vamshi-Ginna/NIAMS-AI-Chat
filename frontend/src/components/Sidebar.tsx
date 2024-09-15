@@ -136,23 +136,24 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
                 />
               ) : (
                 <div
-                  className="relative z-20 font-semibold block py-2 px-4 pointer-events-none flex items-center"
-                  onDoubleClick={() => {
-                    setEditingChatId(chat.id);
-                    setNewChatName(chat.name);
-                  }}
-                  style={{
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '22ch',
-                  }}
-                >
-                  <FaCommentDots className="mr-2 text-white-400" />
-                  <Link to={`/chat/${chat.id}`} className="pointer-events-auto">
-                    {chat.name}
-                  </Link>
-                </div>
+                className="relative z-20 font-semibold block py-2 px-4 pointer-events-none flex items-center"
+                onDoubleClick={() => {
+                  setEditingChatId(chat.id);
+                  setNewChatName(chat.name);
+                }}
+                style={{
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '22ch',
+                }}
+              >
+                <FaCommentDots className="mr-2 text-white-400" />
+                <Link to={`/chat/${chat.id}`} className="pointer-events-auto" title={chat.name}>
+                  {chat.name.length > 16 ? `${chat.name.substring(0, 16)}...` : chat.name}
+                </Link>
+              </div>
+              
               )}
 
               {showTooltip === chat.id && (

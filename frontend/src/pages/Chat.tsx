@@ -64,20 +64,25 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
 
   // Function to handle sending messages
   const handleSendMessage = async (message: string) => {
-    if (!chat) return; // Add this check to prevent accessing undefined
-
+    if (!chat) return; // Prevent accessing undefined
+  
     const updatedChats = chats.map(chat => {
       if (chat.id === id) {
+        // Check if it's the very first user message by inspecting if there are any messages
+        const isFirstMessage = chat.messages.length === 0;
+  
         return {
           ...chat,
+          name: isFirstMessage ? message.slice(0, 100) : chat.name,// Update the chat name if it's the first message
           messages: [...chat.messages, { type: 'user', content: message, isNew: true }],
           showPrompts: false, // Hide prompts when a message is sent
         };
       }
       return chat;
     });
+  
     setChats(updatedChats);
-
+  
     // Show loading state for assistant response
     const updatedChatsWithLoading = updatedChats.map(chat => {
       if (chat.id === id) {
@@ -89,7 +94,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       return chat;
     });
     setChats(updatedChatsWithLoading);
-
+  
     try {
       // Send message to backend and receive response
       const response = await sendMessage(message, chat.messages);
@@ -127,7 +132,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       setIsLoading(false);
     }
   };
-
+  
   // Function to handle file uploads
   const handleFileChange = async (file: File) => {
     if (!chat) return; // Add this check to prevent accessing undefined
@@ -310,12 +315,18 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       <div className="token-info absolute top-0 left-0 m-2 p-2 bg-gray-100 bg-opacity-80 rounded shadow">
         {chat && (
           <>
-            <span className="font-bold">{chat.name} - </span>
+            <span 
+              className="font-bold" 
+              title={chat.name}
+            >
+              {chat.name.length > 20 ? `${chat.name.substring(0, 20)}...` : chat.name} - 
+            </span>
             <span>Tokens: {chat.tokens}</span>
             <span> Cost: ${chat.cost.toFixed(2)}</span>
           </>
         )}
       </div>
+      <br></br><br></br>
       {/* Center the PromptsAndInteractions */}
       {chat?.showPrompts && (
         <div className="flex flex-1 items-center justify-center">
