@@ -7,6 +7,8 @@ import ChatMessage from '../components/ChatMessage';
 import { sendMessage, summarizeFile } from '../api/api';
 import PromptsAndInteractions from '../components/PromptsAndInteractions';
 import { v4 as uuidv4 } from 'uuid';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Message {
   type: string;
@@ -217,6 +219,92 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
     // Implement feedback submission logic here
   };
 
+  // Function to download the chat as PDF
+  // const handleDownloadChat = async () => {
+  //   if (!chat) return;
+    
+  //   console.log(JSON.stringify(chat))
+  //   const input = document.getElementById('chat-content') as HTMLElement;
+  //   const canvas = await html2canvas(input);
+  //   const imgData = canvas.toDataURL('image/png');
+  //   const pdf = new jsPDF();
+    
+  //   pdf.text(`Chat: ${chat.name}`, 10, 10);
+  //   pdf.text(`Tokens: ${chat.tokens}`, 10, 20);
+  //   pdf.text(`Cost: $${chat.cost.toFixed(2)}`, 10, 30);
+    
+  //   pdf.addImage(imgData, 'PNG', 0, 40, 210, 297); // Adjust dimensions
+  //   pdf.save(`${chat.name}.pdf`);
+  // };
+
+    // Function to download the chat as PDF
+   
+      const handleDownloadChat = () => {
+        if (!chat) return;
+
+        const doc = new jsPDF();
+        const lineHeight = 10; // Height for each line
+
+        // Add Title
+        doc.setFontSize(22);
+        doc.text('NIAMS AI CHAT', 105, 20, { align: 'center' }); // Center the title
+
+        // Add Chat Metadata
+        doc.setFontSize(12);
+        doc.text(`Chat: ${chat.name}`, 10, 40);
+        doc.text(`Tokens: ${chat.tokens}`, 10, 50);
+        doc.text(`Cost: $${chat.cost.toFixed(2)}`, 10, 60);
+        
+        // Divider
+        doc.setLineWidth(0.5);
+        doc.line(10, 65, 200, 65); // Horizontal line
+
+        // Start position for chat messages
+        let yOffset = 75; 
+
+        chat.messages.forEach((message) => {
+          const typeLabel = message.type === 'user' ? 'User' : 'Assistant';
+          
+          // Make the label bold
+          doc.setFont('Helvetica', 'bold');
+          
+          // Set label text
+          const labelText = `${typeLabel}:  `;
+
+          // Add label text (bold)
+          doc.text(labelText, 10, yOffset);
+
+          // Reset font back to normal for the message content
+          doc.setFont('Helvetica', 'normal');
+
+          // Split message text into lines that fit the page width (180 units wide)
+          const messageContent = message.content;
+          const splitText = doc.splitTextToSize(messageContent, 180);
+
+          // Adjust yOffset for the message content (since the label already used some space)
+          splitText.forEach((line: string, index: number) => {
+            // If this is the first line, print it next to the label
+            if (index === 0) {
+              const labelWidth = doc.getTextWidth(labelText); // Get width of the label
+              doc.text(line, 10 + labelWidth, yOffset); // Print the first line next to the label
+            } else {
+              if (yOffset + lineHeight > 280) {
+                doc.addPage();  // Add a new page
+                yOffset = 20;   // Reset yOffset for new page
+              }
+              doc.text(line, 10, yOffset); // Print remaining lines normally
+            }
+
+            yOffset += lineHeight;
+          });
+        });
+
+        // Save the PDF with the chat name
+        doc.save(`${chat.name}.pdf`);
+      };
+
+    
+
   return (
     <div className="flex flex-col h-full relative">
       <div className="token-info absolute top-0 left-0 m-2 p-2 bg-gray-100 bg-opacity-80 rounded shadow">
@@ -250,7 +338,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       </div>
 
       {/* Chat Input */}
-      {chat && <ChatInput onSendMessage={handleSendMessage} onFileChange={handleFileChange} />}
+      {chat && <ChatInput onSendMessage={handleSendMessage} onFileChange={handleFileChange} onDownloadChat={handleDownloadChat} />}
 
       {/* React Toastify Container */}
       <ToastContainer />

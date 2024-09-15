@@ -156,7 +156,8 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
               )}
 
               {showTooltip === chat.id && (
-                <div className="absolute top-full mt-1 bg-gray-700 text-white text-xs rounded-lg py-1 px-2 shadow-lg">
+                <div className="absolute top-full mt-1 bg-gray-700 text-white text-xs rounded-lg py-1 px-2 shadow-lg"
+                >
                   Double-click to rename
                 </div>
               )}
