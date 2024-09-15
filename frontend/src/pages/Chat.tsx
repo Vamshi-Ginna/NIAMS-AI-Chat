@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ChatInput from '../components/ChatInput';
 import ChatMessage from '../components/ChatMessage';
 import { sendMessage, summarizeFile } from '../api/api';
 import PromptsAndInteractions from '../components/PromptsAndInteractions';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Message {
   type: string;
@@ -16,9 +19,10 @@ interface Message {
 interface ChatProps {
   chats: { id: string; name: string; messages: Message[], tokens: number, cost: number, showPrompts: boolean }[];
   setChats: React.Dispatch<React.SetStateAction<{ id: string; name: string; messages: Message[], tokens: number, cost: number, showPrompts: boolean }[]>>;
+  userName:string;
 }
 
-const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
+const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const chat = chats.find(chat => chat.id === id);
@@ -28,31 +32,44 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
   useEffect(() => {
     if (!id && chats.length === 0) {
       const newChat = {
-        id: `chat-${chats.length + 1}`,
+        id: uuidv4(),
         name: `Chat ${chats.length + 1}`,
         messages: [],
         tokens: 0,
         cost: 0,
-        showPrompts: true // Show prompts initially for new chat
+        showPrompts: true, // Show prompts initially for new chat
       };
       setChats([...chats, newChat]);
       navigate(`/chat/${newChat.id}`);
     }
   }, [id, chats, setChats, navigate]);
 
-  // Return if the chat is not found
-  if (!chat) {
-    return <div>Chat not found</div>;
-  }
+  // Handle chat not found scenario
+  useEffect(() => {
+    if (!chat) {
+      // Show an error toast notification
+      toast.error('Chat not found. Redirecting to overview page...', {
+        position: "top-right", // Corrected position usage
+        autoClose: 3000, // Closes after 3 seconds
+      });
+
+      // Redirect to overview after a short delay
+      setTimeout(() => {
+        navigate('/'); // Adjust the path based on your actual overview page
+      }, 3000);
+    }
+  }, [chat, navigate]);
 
   // Function to handle sending messages
   const handleSendMessage = async (message: string) => {
+    if (!chat) return; // Add this check to prevent accessing undefined
+
     const updatedChats = chats.map(chat => {
       if (chat.id === id) {
         return {
           ...chat,
           messages: [...chat.messages, { type: 'user', content: message, isNew: true }],
-          showPrompts: false // Hide prompts when a message is sent
+          showPrompts: false, // Hide prompts when a message is sent
         };
       }
       return chat;
@@ -64,7 +81,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
       if (chat.id === id) {
         return {
           ...chat,
-          messages: [...chat.messages, { type: 'assistant', content: '...', isLoading: true, isNew: true }]
+          messages: [...chat.messages, { type: 'assistant', content: '...', isLoading: true, isNew: true }],
         };
       }
       return chat;
@@ -84,7 +101,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
                 : { ...msg, isNew: false }
             ),
             tokens: chat.tokens + response.tokens,
-            cost: chat.cost + response.cost
+            cost: chat.cost + response.cost,
           };
         }
         return chat;
@@ -98,7 +115,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
             ...chat,
             messages: chat.messages.map(msg =>
               msg.isLoading ? { type: 'assistant', content: 'Error: Unable to fetch response', isNew: false } : msg
-            )
+            ),
           };
         }
         return chat;
@@ -111,6 +128,8 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
 
   // Function to handle file uploads
   const handleFileChange = async (file: File) => {
+    if (!chat) return; // Add this check to prevent accessing undefined
+
     const allowedExtensions = ['pdf', 'json', 'docx', 'txt', 'md', 'xml'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
 
@@ -120,7 +139,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
         if (c.id === chat.id) {
           return {
             ...c,
-            messages: [...c.messages, { type: 'user', content: userMessage, isNew: true }]
+            messages: [...c.messages, { type: 'user', content: userMessage, isNew: true }],
           };
         }
         return c;
@@ -131,7 +150,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
         if (c.id === chat.id) {
           return {
             ...c,
-            messages: [...c.messages, { type: 'assistant', content: '...', isLoading: true, isNew: true }]
+            messages: [...c.messages, { type: 'assistant', content: '...', isLoading: true, isNew: true }],
           };
         }
         return c;
@@ -150,7 +169,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
                 ...c,
                 messages: c.messages.map(msg =>
                   msg.isLoading ? { type: 'assistant', content: summary, isNew: true } : { ...msg, isNew: false }
-                )
+                ),
               };
             }
             return c;
@@ -164,7 +183,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
                 ...c,
                 messages: c.messages.map(msg =>
                   msg.isLoading ? { type: 'assistant', content: 'Error: Unable to fetch summary', isNew: false } : msg
-                )
+                ),
               };
             }
             return c;
@@ -182,7 +201,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
               ...c,
               messages: c.messages.map(msg =>
                 msg.isLoading ? { type: 'assistant', content: errorMessage, isNew: true } : { ...msg, isNew: false }
-              )
+              ),
             };
           }
           return c;
@@ -201,21 +220,24 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
   return (
     <div className="flex flex-col h-full relative">
       <div className="token-info absolute top-0 left-0 m-2 p-2 bg-gray-100 bg-opacity-80 rounded shadow">
-        <span className="font-bold">{chat.name} - </span>
-        <span>Tokens: {chat.tokens}</span>
-        <span> Cost: ${chat.cost.toFixed(2)}</span>
+        {chat && (
+          <>
+            <span className="font-bold">{chat.name} - </span>
+            <span>Tokens: {chat.tokens}</span>
+            <span> Cost: ${chat.cost.toFixed(2)}</span>
+          </>
+        )}
       </div>
-   
       {/* Center the PromptsAndInteractions */}
-      {chat.showPrompts && (
+      {chat?.showPrompts && (
         <div className="flex flex-1 items-center justify-center">
-          <PromptsAndInteractions onCardClick={(message: string) => handleSendMessage(message)} />
+          <PromptsAndInteractions userName={userName} onCardClick={(message: string) => handleSendMessage(message)} />
         </div>
       )}
 
       {/* Chat Messages Section */}
       <div className="flex-1 overflow-y-auto p-4">
-        {chat.messages.map((msg, index) => (
+        {chat?.messages.map((msg, index) => (
           <ChatMessage
             key={index}
             message={msg}
@@ -228,7 +250,10 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats }) => {
       </div>
 
       {/* Chat Input */}
-      <ChatInput onSendMessage={handleSendMessage} onFileChange={handleFileChange} />
+      {chat && <ChatInput onSendMessage={handleSendMessage} onFileChange={handleFileChange} />}
+
+      {/* React Toastify Container */}
+      <ToastContainer />
     </div>
   );
 };

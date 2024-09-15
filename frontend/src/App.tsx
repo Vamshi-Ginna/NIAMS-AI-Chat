@@ -50,8 +50,8 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto relative">
             <Routes>
               <Route path="/" element={<Overview />} />
-              <Route path="/chat/:id" element={<Chat chats={chats} setChats={setChats} />} />
-              <Route path="/chat/*" element={<Chat chats={chats} setChats={setChats} />} />
+              <Route path="/chat/:id" element={<Chat chats={chats} setChats={setChats} userName={userName}  />} />
+              <Route path="/chat/*" element={<Chat chats={chats} setChats={setChats} userName={userName} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaInfoCircle, FaComments, FaBook, FaTimes, FaTrash  } from 'react-icons/fa';
+import {FaAngleLeft , FaBars, FaInfoCircle, FaComments, FaTimes, FaTrash, FaPlus, FaCommentDots } from 'react-icons/fa';
+import { v4 as uuidv4 } from 'uuid';
 
 interface SidebarProps {
   chats: { id: string; name: string; messages: { type: string; content: string }[]; tokens: number; cost: number; showPrompts: boolean }[];
@@ -10,133 +11,166 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [newChatName, setNewChatName] = useState<string>('');
+  const [showTooltip, setShowTooltip] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const totalTokens = chats.reduce((acc, chat) => acc + chat.tokens, 0);
   const totalCost = chats.reduce((acc, chat) => acc + chat.cost, 0);
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
-  const startNewChat = () => {
+  const handleNewChat = () => {
     const newChat = {
-      id: `chat-${chats.length + 1}`,
+      id: uuidv4(),
       name: `Chat ${chats.length + 1}`,
       messages: [],
       tokens: 0,
       cost: 0,
-      showPrompts: true
+      showPrompts: true,
     };
     setChats([...chats, newChat]);
     navigate(`/chat/${newChat.id}`);
   };
 
   const handleChatClick = () => {
-    if (chats.length === 0) {
-      startNewChat();
+    if (!chats.length) {
+      handleNewChat();
     } else {
-      const lastChat = chats.slice(-1)[0];
-      navigate(`/chat/${lastChat.id}`);
+      navigate(`/chat/${chats[chats.length - 1].id}`);
     }
   };
 
   const handleDeleteChat = (chatId: string) => {
-    if (window.confirm("Are you sure you want to delete this chat?")) {
-      const updatedChats = chats.filter((chat) => chat.id !== chatId);
-      setChats(updatedChats);
-  
-    // If the deleted chat was the active chat, navigate to the overview or another chat.
-    // if (updatedChats.length > 0) {
-    //   navigate(`/chat/${updatedChats[0].id}`);
-    // } else {
-      navigate(`/`);  //for now let's take the user to overview page
-    //}
+    if (window.confirm('Are you sure you want to delete this chat?')) {
+      setChats(chats.filter((chat) => chat.id !== chatId));
+      navigate('/');
     }
   };
-  return (
-    <div className={`bg-pinkish shadow-lg ${isCollapsed ? 'w-16' : 'w-64'} h-full relative transition-all duration-300 ease-in-out`}>
-      <div className="p-6 flex justify-between items-center ">
-        <button onClick={toggleSidebar} className="text-white hover:text-custom_blue transition-colors duration-300">
-          {isCollapsed ? <FaBars /> : <FaTimes />}
-        </button>
-      </div>
 
-      {!isCollapsed && (
-          <div className="bg-white p-2 rounded-lg shadow-md">
-            <img 
-              src="/niams_logo.jpg" 
-              alt="Logo" 
-              className="h-12 w-auto mx-auto"
-            />
+  const handleSaveChatName = (chatId: string) => {
+    if (!newChatName.trim()) {
+      setEditingChatId(null);
+      return;
+    }
+    setChats(chats.map((chat) => (chat.id === chatId ? { ...chat, name: newChatName } : chat)));
+    setEditingChatId(null);
+  };
+
+  const handleBlur = (chatId: string, currentChatName: string) => {
+    if (!newChatName.trim()) {
+      setNewChatName(currentChatName);
+    } else {
+      handleSaveChatName(chatId);
+    }
+    setEditingChatId(null);
+  };
+
+  return (
+    <div className={`bg-purple-800 shadow-xl ${isCollapsed ? 'w-16' : 'w-64'} flex flex-col h-screen max-h-screen relative transition-all duration-300 ease-in-out`}>
+      {/* Top Section: Collapse Button & Logo */}
+      <div className="p-4 flex items-center"> 
+        <button onClick={toggleSidebar} className="text-white hover:text-purple-300 transition-colors duration-300">
+          {isCollapsed ? <FaBars /> : <FaAngleLeft  />}
+        </button>
+        {!isCollapsed && (
+          <div className="flex items-center ml-1"> {/* Adjusted margin-left to 'ml-1' for a smaller gap */}
+            <img src="/niams_white_logo.png" alt="Logo" className="h-11 w-auto" /> {/* Kept the reduced size */}
           </div>
         )}
-  
-      <nav className="mt-6">
+      </div>
+      {/* Navigation */}
+      <nav className="my-6 ">
         <div className="flex flex-col">
-          <Link to="/" className="text-black font-semibold hover:bg-pinkish_dark hover:text-white flex items-center py-3 px-4 rounded-md transition-colors duration-300">
+          <Link to="/" className="text-white font-semibold hover:bg-purple-700 flex items-center py-3 px-4 rounded-md transition-colors duration-300">
             <FaInfoCircle className="mr-2" />
             {!isCollapsed && <span>Overview</span>}
           </Link>
-          <div onClick={handleChatClick} className="text-black font-semibold hover:bg-pinkish_dark hover:text-white flex items-center py-3 px-4 cursor-pointer rounded-md transition-colors duration-300">
+
+          <div onClick={handleChatClick} className="text-white font-semibold hover:bg-purple-700 flex items-center py-3 px-4 cursor-pointer rounded-md transition-colors duration-300">
             <FaComments className="mr-2" />
             {!isCollapsed && <span>Chat</span>}
           </div>
+
+          <div onClick={handleNewChat} className="text-white font-semibold hover:bg-purple-700 flex items-center py-3 px-4 cursor-pointer rounded-md transition-colors duration-300">
+            <FaPlus className="mr-2" />
+            {!isCollapsed && <span>Start New Chat</span>}
+          </div>
         </div>
       </nav>
-  
+
+      <hr/>
+
+      {/* User Info */}
       {!isCollapsed && (
-        <>
-          <hr className="my-2 border-pinkish_dark" />
-          <div className="p-4">
-          <button onClick={startNewChat} className="w-full bg-white text-black font-bold p-3 rounded-lg hover:bg-pinkish_dark hover:text-white transition-colors duration-300 shadow-md">
-            Start New Chat
-          </button>
+        <div className="mt-4 text-white pl-4">
+          <span className="block font-semibold text-sm">Logged in as: {userName}</span>
+          <span className="block font-semibold text-sm mt-2">Total Tokens: {totalTokens}</span>
+          <span className="block font-semibold text-sm">Total Cost: ${totalCost.toFixed(2)}</span>
+        </div>
+      )}
 
-            <div className="mt-4 text-gray-100">
-              <span className="block text-black font-semibold text-sm">Logged in as: {userName}</span>
-              <span className="block text-black font-semibold text-sm mt-2">Total Tokens for this session: {totalTokens}</span>
-              <span className="block text-black font-semibold text-sm">Total Cost for this session: ${totalCost.toFixed(2)}</span>
+      {/* Chat List */}
+      {!isCollapsed && (
+        <div className="p-4 overflow-auto flex-1">
+          {chats.map((chat) => (
+            <div
+              key={chat.id}
+              className="relative flex justify-between items-center group hover:bg-purple-700 text-white rounded-md transition-colors duration-300"
+              onMouseEnter={() => setShowTooltip(chat.id)}
+              onMouseLeave={() => setShowTooltip(null)}
+            >
+              {editingChatId === chat.id ? (
+                <input
+                  value={newChatName}
+                  onChange={(e) => setNewChatName(e.target.value)}
+                  onBlur={() => handleBlur(chat.id, chat.name)}
+                  className="bg-white text-black p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-purple-700"
+                  autoFocus
+                />
+              ) : (
+                <div
+                  className="relative z-20 font-semibold block py-2 px-4 pointer-events-none flex items-center"
+                  onDoubleClick={() => {
+                    setEditingChatId(chat.id);
+                    setNewChatName(chat.name);
+                  }}
+                  style={{
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '22ch',
+                  }}
+                >
+                  <FaCommentDots className="mr-2 text-white-400" />
+                  <Link to={`/chat/${chat.id}`} className="pointer-events-auto">
+                    {chat.name}
+                  </Link>
+                </div>
+              )}
+
+              {showTooltip === chat.id && (
+                <div className="absolute top-full mt-1 bg-gray-700 text-white text-xs rounded-lg py-1 px-2 shadow-lg">
+                  Double-click to rename
+                </div>
+              )}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteChat(chat.id);
+                }}
+                className="relative z-20 text-white-300 hover:text-red-500 p-1 transition-colors duration-300"
+              >
+                <FaTrash />
+              </button>
             </div>
-          </div>
-          <div className="p-4">
-  {chats.map((chat) => (
-    <div key={chat.id} className="relative flex justify-between items-center group hover:bg-pinkish_dark hover:text-white rounded-md transition-colors duration-300">
-      
-      <Link 
-        to={`/chat/${chat.id}`} 
-        className="absolute inset-0 z-10"
-        aria-label={`Chat ${chat.name}`}
-      ></Link>
-      
-      {/* The chat name is now clickable */}
-      <div className="relative z-20 font-semibold block py-2 px-4 pointer-events-none">
-        <Link to={`/chat/${chat.id}`} className="pointer-events-auto">
-          {chat.name}
-        </Link>
-      </div>
-      
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent the link click when clicking delete
-          handleDeleteChat(chat.id);
-        }}
-        className="relative z-20 text-gray-300 hover:text-red-700 p-1 hidden group-hover:block transition-colors duration-300"
-      >
-        <FaTrash />
-      </button>
-    </div>
-  ))}
-</div>
-
-
-
-        </>
+          ))}
+        </div>
       )}
     </div>
   );
-  
-  
 };
 
 export default Sidebar;

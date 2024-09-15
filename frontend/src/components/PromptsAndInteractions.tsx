@@ -3,12 +3,15 @@ import { FiBookOpen, FiMessageCircle, FiRepeat, FiUserCheck, FiCpu, FiInfo, FiCh
 
 interface PromptsAndInteractionsProps {
   onCardClick: (message: string) => void;
+  userName: string;
 }
 
-const PromptsAndInteractions: React.FC<PromptsAndInteractionsProps> = ({ onCardClick }) => {
+const PromptsAndInteractions: React.FC<PromptsAndInteractionsProps> = ({ onCardClick, userName }) => {
   return (
     <div className="p-4 flex flex-col items-center justify-center">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Welcome!</h2>
+      <br></br>
+      <br></br>
+      <h1 className="text-2xl font-semibold mb-4 text-gray-800">Welcome! {userName} </h1>
       <div className="grid grid-cols-2 gap-4 max-w-4xl">
         {/* Text Summarization */}
         <div
