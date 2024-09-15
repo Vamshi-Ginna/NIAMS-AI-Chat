@@ -8,6 +8,7 @@ import { MsalAuthenticationTemplate } from '@azure/msal-react';
 import { loginRequest } from './authConfig';
 import { InteractionType } from '@azure/msal-browser';
 import { loginUser } from './api/api';  
+import Training from './pages/Training';
 
 const App: React.FC = () => {
   const { instance, accounts } = useMsal();
@@ -50,6 +51,7 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto relative">
             <Routes>
               <Route path="/" element={<Overview />} />
+              <Route path="/training" element={<Training />} />
               <Route path="/chat/:id" element={<Chat chats={chats} setChats={setChats} userName={userName}  />} />
               <Route path="/chat/*" element={<Chat chats={chats} setChats={setChats} userName={userName} />} />
               <Route path="*" element={<Navigate to="/" replace />} />

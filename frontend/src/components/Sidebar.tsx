@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {FaAngleLeft , FaBars, FaInfoCircle, FaComments, FaTimes, FaTrash, FaPlus, FaCommentDots } from 'react-icons/fa';
+import { IoDocumentTextSharp  } from "react-icons/io5";
 import { v4 as uuidv4 } from 'uuid';
 
 interface SidebarProps {
@@ -86,6 +87,10 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
           <Link to="/" className="text-white font-semibold hover:bg-purple-700 flex items-center py-3 px-4 rounded-md transition-colors duration-300">
             <FaInfoCircle className="mr-2" />
             {!isCollapsed && <span>Overview</span>}
+          </Link>
+          <Link to="/training" className="text-white font-semibold hover:bg-purple-700 flex items-center py-3 px-4 rounded-md transition-colors duration-300">
+            <IoDocumentTextSharp  className="mr-2" />
+            {!isCollapsed && <span>Training</span>}
           </Link>
 
           <div onClick={handleChatClick} className="text-white font-semibold hover:bg-purple-700 flex items-center py-3 px-4 cursor-pointer rounded-md transition-colors duration-300">
