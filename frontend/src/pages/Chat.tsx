@@ -335,18 +335,35 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       )}
 
       {/* Chat Messages Section */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {chat?.messages.map((msg, index) => (
-          <ChatMessage
-            key={index}
-            message={msg}
-            type={msg.type}
-            isLoading={msg.isLoading}
-            isNew={msg.isNew || false}
-            onThumbsDown={handleThumbsDown}
-          />
-        ))}
-      </div>
+      {/* Chat Messages Section */}
+<div className="flex-1 overflow-y-auto p-4">
+  {chat?.messages.map((msg, index) => (
+    <ChatMessage
+      key={index}
+      message={msg}
+      type={msg.type}
+      isLoading={msg.isLoading}
+      isNew={msg.isNew || false}
+      onThumbsDown={handleThumbsDown}
+      onTypingComplete={() => {
+        // Update the isNew status to false after the typing effect completes
+        const updatedChats = chats.map(c => {
+          if (c.id === chat.id) {
+            return {
+              ...c,
+              messages: c.messages.map((message, i) => 
+                i === index ? { ...message, isNew: false } : message
+              ),
+            };
+          }
+          return c;
+        });
+        setChats(updatedChats);
+      }}
+    />
+  ))}
+</div>
+
 
       {/* Chat Input */}
       {chat && <ChatInput onSendMessage={handleSendMessage} onFileChange={handleFileChange} onDownloadChat={handleDownloadChat} />}

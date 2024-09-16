@@ -14,31 +14,45 @@ interface ChatMessageProps {
   isLoading?: boolean;
   isNew: boolean;
   onThumbsDown: (message: string) => void;
+  // Optional callback to update the message state in the parent component
+  onTypingComplete?: () => void; 
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isNew, onThumbsDown }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  message,
+  type,
+  isLoading,
+  isNew,
+  onThumbsDown,
+  onTypingComplete
+}) => {
   const [displayedMessage, setDisplayedMessage] = useState<string>(isNew ? '' : message.content);
   const [copied, setCopied] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
+    const content = typeof message === 'string' ? message : message.content;
+
     if (isNew && !isLoading) {
       let i = 0;
-      const content = typeof message === 'string' ? message : message.content;
 
       const interval = setInterval(() => {
         setDisplayedMessage(content.slice(0, i));
         i++;
         if (i > content.length) {
           clearInterval(interval);
+          // Call the callback to inform the parent that typing is complete
+          if (onTypingComplete) {
+            onTypingComplete();
+          }
         }
       }, 10);
 
       return () => clearInterval(interval);
     } else {
-      setDisplayedMessage(message.content); // Display full message immediately if it's not new
+      setDisplayedMessage(content); // Display the full message immediately if it's not new or has already been typed
     }
-  }, [message, isNew, isLoading]);
+  }, [message, isNew, isLoading, onTypingComplete]);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(displayedMessage);
@@ -59,7 +73,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
     // Trigger backend function to save the feedback
   };
 
-  const messageStyle = type === 'user' ? 'bg-gray-200 text-black': 'bg-custom_blue text-black' ;
+  const messageStyle = type === 'user' ? 'bg-gray-200 text-black' : 'bg-custom_blue text-black';
 
   return (
     <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -83,12 +97,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, type, isLoading, isN
                   code({ node, className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '');
                     return match ? (
-                      <SyntaxHighlighter
-                        style={okaidia}
-                        language={match[1]}
-                        PreTag="div"
-                        {...props}
-                      >
+                      <SyntaxHighlighter style={okaidia} language={match[1]} PreTag="div" {...props}>
                         {String(children).replace(/\n$/, '')}
                       </SyntaxHighlighter>
                     ) : (
