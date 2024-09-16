@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaRegUser } from 'react-icons/fa';
 import { MdOutlineFeedback, MdContentCopy, MdCheck } from 'react-icons/md'; // Added MdCheck for tick mark
 import { RiRobot2Line } from 'react-icons/ri';
@@ -14,8 +14,8 @@ interface ChatMessageProps {
   isLoading?: boolean;
   isNew: boolean;
   onThumbsDown: (message: string) => void;
-  // Optional callback to update the message state in the parent component
   onTypingComplete?: () => void; 
+  scrollToBottom: () => void; // Accept scrollToBottom as a prop
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -24,7 +24,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isLoading,
   isNew,
   onThumbsDown,
-  onTypingComplete
+  onTypingComplete,
+  scrollToBottom // Scroll function passed as prop
 }) => {
   const [displayedMessage, setDisplayedMessage] = useState<string>(isNew ? '' : message.content);
   const [copied, setCopied] = useState(false);
@@ -39,6 +40,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       const interval = setInterval(() => {
         setDisplayedMessage(content.slice(0, i));
         i++;
+
+        // Call scrollToBottom during the typing effect
+        scrollToBottom();
+
         if (i > content.length) {
           clearInterval(interval);
           // Call the callback to inform the parent that typing is complete
@@ -46,13 +51,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             onTypingComplete();
           }
         }
-      }, 10);
+      }, 1);
 
       return () => clearInterval(interval);
     } else {
       setDisplayedMessage(content); // Display the full message immediately if it's not new or has already been typed
     }
-  }, [message, isNew, isLoading, onTypingComplete]);
+  }, [message, isNew, isLoading, onTypingComplete, scrollToBottom]);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(displayedMessage);

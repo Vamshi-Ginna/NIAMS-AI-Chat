@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -29,6 +29,22 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   const navigate = useNavigate();
   const chat = chats.find(chat => chat.id === id);
   const [isLoading, setIsLoading] = useState(false);
+
+    // Create a ref for the chat container
+    const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+    // Function to scroll to the bottom of the chat
+    const scrollToBottom = () => {
+      console.log("scroll to bottom")
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
+    };
+  
+     // Delay scrolling to the bottom until the DOM is fully updated with new messages
+  useEffect(() => {
+    setTimeout(scrollToBottom, 100); // Delay to allow messages to render
+  }, [chat?.messages]);
 
   // Initialize a new chat if no chat is found or the current chat is invalid
   useEffect(() => {
@@ -73,7 +89,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   
         return {
           ...chat,
-          name: isFirstMessage ? message.slice(0, 100) : chat.name,// Update the chat name if it's the first message
+          name: isFirstMessage ? message.slice(0, 30) : chat.name,// Update the chat name if it's the first message
           messages: [...chat.messages, { type: 'user', content: message, isNew: true }],
           showPrompts: false, // Hide prompts when a message is sent
         };
@@ -336,34 +352,33 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
 
       {/* Chat Messages Section */}
       {/* Chat Messages Section */}
-<div className="flex-1 overflow-y-auto p-4">
-  {chat?.messages.map((msg, index) => (
-    <ChatMessage
-      key={index}
-      message={msg}
-      type={msg.type}
-      isLoading={msg.isLoading}
-      isNew={msg.isNew || false}
-      onThumbsDown={handleThumbsDown}
-      onTypingComplete={() => {
-        // Update the isNew status to false after the typing effect completes
-        const updatedChats = chats.map(c => {
-          if (c.id === chat.id) {
-            return {
-              ...c,
-              messages: c.messages.map((message, i) => 
-                i === index ? { ...message, isNew: false } : message
-              ),
-            };
-          }
-          return c;
-        });
-        setChats(updatedChats);
-      }}
-    />
-  ))}
-</div>
-
+      <div className="flex-1 overflow-y-auto p-4" ref={chatContainerRef}>
+        {chat?.messages.map((msg, index) => (
+          <ChatMessage
+            key={index}
+            message={msg}
+            type={msg.type}
+            isLoading={msg.isLoading}
+            isNew={msg.isNew || false}
+            scrollToBottom={scrollToBottom}
+            onThumbsDown={() => {}}
+            onTypingComplete={() => {
+              const updatedChats = chats.map(c => {
+                if (c.id === chat.id) {
+                  return {
+                    ...c,
+                    messages: c.messages.map((message, i) =>
+                      i === index ? { ...message, isNew: false } : message
+                    ),
+                  };
+                }
+                return c;
+              });
+              setChats(updatedChats);
+            }}
+          />
+        ))}
+      </div>
 
       {/* Chat Input */}
       {chat && <ChatInput onSendMessage={handleSendMessage} onFileChange={handleFileChange} onDownloadChat={handleDownloadChat} />}
