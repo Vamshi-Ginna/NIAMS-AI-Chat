@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 
 const BestPractices: React.FC = () => {
   return (
@@ -12,8 +13,14 @@ const BestPractices: React.FC = () => {
           <strong>Why:</strong> The more specific you are, the less room there is for misinterpretation. Clear, concise prompts help the model understand exactly what you need.
         </p>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-600"><strong>Less Specific:</strong> "Tell me about climate change."</p>
-          <p className="text-gray-600 mt-2"><strong>More Specific:</strong> "Summarize the main causes of climate change, focusing on industrial emissions."</p>
+          <p className="text-gray-600 flex items-center">
+            <FaTimesCircle className="text-red-500 mr-2" />
+            <strong>Less Specific:</strong> "Tell me about climate change."
+          </p>
+          <p className="text-gray-600 mt-2 flex items-center">
+            <FaCheckCircle className="text-green-500 mr-2" />
+            <strong>More Specific:</strong> "Summarize the main causes of climate change, focusing on industrial emissions."
+          </p>
         </div>
       </div>
 
@@ -24,8 +31,14 @@ const BestPractices: React.FC = () => {
           <strong>Why:</strong> Using detailed descriptions or analogies can guide the model to generate more accurate and relevant responses.
         </p>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-600"><strong>Less Descriptive:</strong> "Explain machine learning."</p>
-          <p className="text-gray-600 mt-2"><strong>More Descriptive:</strong> "Explain machine learning as if you’re teaching a beginner, using the analogy of teaching a child to recognize animals."</p>
+          <p className="text-gray-600 flex items-center">
+            <FaTimesCircle className="text-red-500 mr-2" />
+            <strong>Less Descriptive:</strong> "Explain machine learning."
+          </p>
+          <p className="text-gray-600 mt-2 flex items-center">
+            <FaCheckCircle className="text-green-500 mr-2" />
+            <strong>More Descriptive:</strong> "Explain machine learning as if you’re teaching a beginner, using the analogy of teaching a child to recognize animals."
+          </p>
         </div>
       </div>
 
@@ -36,8 +49,14 @@ const BestPractices: React.FC = () => {
           <strong>Why:</strong> Repeating instructions or placing them in key areas of your prompt can reinforce what you want the model to do. This can be especially useful for complex queries.
         </p>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-600"><strong>Initial Prompt:</strong> "List the steps for setting up a new user in the system."</p>
-          <p className="text-gray-600 mt-2"><strong>Enhanced Prompt:</strong> "List the steps for setting up a new user in the system. Make sure to start with the system login process and end with the account activation."</p>
+          <p className="text-gray-600 flex items-center">
+            <FaTimesCircle className="text-red-500 mr-2" />
+            <strong>Initial Prompt:</strong> "List the steps for setting up a new user in the system."
+          </p>
+          <p className="text-gray-600 mt-2 flex items-center">
+            <FaCheckCircle className="text-green-500 mr-2" />
+            <strong>Enhanced Prompt:</strong> "List the steps for setting up a new user in the system. Make sure to start with the system login process and end with the account activation."
+          </p>
         </div>
       </div>
 
@@ -48,8 +67,14 @@ const BestPractices: React.FC = () => {
           <strong>Why:</strong> The order in which you present your information can impact the quality of the response. Start with instructions and follow with the content or examples you want the model to process.
         </p>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-600"><strong>Content First:</strong> "[Article Text] Summarize the above article."</p>
-          <p className="text-gray-600 mt-2"><strong>Instruction First:</strong> "Summarize the following article: [Article Text]"</p>
+          <p className="text-gray-600 flex items-center">
+            <FaTimesCircle className="text-red-500 mr-2" />
+            <strong>Content First:</strong> "[Article Text] Summarize the above article."
+          </p>
+          <p className="text-gray-600 mt-2 flex items-center">
+            <FaCheckCircle className="text-green-500 mr-2" />
+            <strong>Instruction First:</strong> "Summarize the following article: [Article Text]"
+          </p>
         </div>
       </div>
 
@@ -60,8 +85,14 @@ const BestPractices: React.FC = () => {
           <strong>Why:</strong> Sometimes, the model may not have enough information to generate a correct response. Providing an alternative path, like responding with "not found," can prevent it from making up information.
         </p>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-600"><strong>Without 'Out':</strong> "What is the meaning of life according to the text?"</p>
-          <p className="text-gray-600 mt-2"><strong>With 'Out':</strong> "What is the meaning of life according to the text? If not found in the text, respond with 'not found.'"</p>
+          <p className="text-gray-600 flex items-center">
+            <FaTimesCircle className="text-red-500 mr-2" />
+            <strong>Without 'Out':</strong> "What is the meaning of life according to the text?"
+          </p>
+          <p className="text-gray-600 mt-2 flex items-center">
+            <FaCheckCircle className="text-green-500 mr-2" />
+            <strong>With 'Out':</strong> "What is the meaning of life according to the text? If not found in the text, respond with 'not found.'"
+          </p>
         </div>
       </div>
 
