@@ -34,7 +34,7 @@ const PromptsAndInteractions: React.FC<PromptsAndInteractionsProps> = ({ onCardC
             <FiMessageCircle className="text-green-600 text-xl mr-2" />
             <h3 className="text-sm font-semibold text-gray-800">Creative Content Generation</h3>
           </div>
-          <p className="text-gray-600 text-xs mt-1">Generate stories, compose emails, or brainstorm project ideas with AI's creative assistance.</p>
+          <p className="text-gray-600 text-xs mt-1">Compose emails, or brainstorm project ideas with AI's creative assistance.</p>
           <button className="mt-2 text-green-600 text-sm flex items-center font-semibold hover:underline"
                   onClick={() => onCardClick('I’m looking for help with generating creative content. Could you assist me in brainstorming ideas? Feel free to ask for more details to guide the process.')}
           >
@@ -58,6 +58,7 @@ const PromptsAndInteractions: React.FC<PromptsAndInteractionsProps> = ({ onCardC
         </div>
 
         {/* Simulating Personas */}
+        {/*
         <div
           className="bg-purple-50 p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 ease-in-out" >
           <div className="flex items-center">
@@ -71,6 +72,7 @@ const PromptsAndInteractions: React.FC<PromptsAndInteractionsProps> = ({ onCardC
             Try it now <FiChevronRight className="ml-1" />
           </button>
         </div>
+        */}
 
         {/* Engaging in Technical Dialogues */}
         <div
@@ -92,9 +94,9 @@ const PromptsAndInteractions: React.FC<PromptsAndInteractionsProps> = ({ onCardC
           className="bg-teal-50 p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 ease-in-out">
           <div className="flex items-center">
             <FiInfo className="text-teal-600 text-xl mr-2" />
-            <h3 className="text-sm font-semibold text-gray-800">General Knowledge & Trivia</h3>
+            <h3 className="text-sm font-semibold text-gray-800">General Knowledge</h3>
           </div>
-          <p className="text-gray-600 text-xs mt-1">Ask questions on a wide range of topics, from science and history to pop culture and sports.</p>
+          <p className="text-gray-600 text-xs mt-1">Ask questions on a wide range of topics from science and policy to Information Technology and tools.</p>
           <button className="mt-2 text-teal-600 text-sm flex items-center font-semibold hover:underline"
                   onClick={() => onCardClick('I’m interested in learning some fascinating trivia or general knowledge. Could you share information on a wide range of topics? Feel free to ask what specific topics I am most interested in.')}
           >

@@ -30,20 +30,45 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   const chat = chats.find(chat => chat.id === id);
   const [isLoading, setIsLoading] = useState(false);
 
-    // Create a ref for the chat container
-    const chatContainerRef = useRef<HTMLDivElement | null>(null);
+    
+  // Create a ref for the chat container
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true); // Track whether auto-scroll is enabled
 
-    // Function to scroll to the bottom of the chat
-    const scrollToBottom = () => {
-      console.log("scroll to bottom")
-      if (chatContainerRef.current) {
-        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  // Function to scroll to the bottom of the chat
+  const scrollToBottom = () => {
+    if (chatContainerRef.current && isAutoScrollEnabled) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Function to detect user scroll and toggle auto-scroll
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+      const isAtBottom = scrollHeight - clientHeight <= scrollTop + 10; // Tolerance for floating point precision
+
+      if (isAtBottom) {
+        setIsAutoScrollEnabled(true);  // Enable auto-scroll when the user scrolls to the bottom
+      } else {
+        setIsAutoScrollEnabled(false); // Disable auto-scroll when the user scrolls up
+      }
+    }
+  };
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  
-     // Delay scrolling to the bottom until the DOM is fully updated with new messages
+  }, []);
   useEffect(() => {
-    setTimeout(scrollToBottom, 100); // Delay to allow messages to render
+    scrollToBottom(); // Scroll to the bottom every time messages update
   }, [chat?.messages]);
 
   // Initialize a new chat if no chat is found or the current chat is invalid

@@ -81,7 +81,7 @@ export const sendMessage = async (message, history) => {
   try {
     const response = await api.post('/chat/send', {
       message,
-      history,
+      history:history.slice(-15),  //only sending last 15 conversations
     });
     return response.data;  // This will include message_id in the response
   } catch (error) {
