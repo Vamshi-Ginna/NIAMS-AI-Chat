@@ -31,7 +31,15 @@ const App: React.FC = () => {
   >([]);
 
   const userName =
-    accounts.length > 0 ? (accounts[0].name ?? "Guest") : "Guest";
+    accounts.length > 0
+      ? accounts[0].name
+        ? accounts[0].name
+            .split(",")
+            .reverse()
+            .map((name) => name.trim())
+            .join(" ")
+        : "Guest"
+      : "Guest";
 
   useEffect(() => {
     // Call the login API after the user is authenticated to create a user record on backend if not already created
