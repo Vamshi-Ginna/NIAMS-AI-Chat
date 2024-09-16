@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaRegUser } from 'react-icons/fa';
-import { MdOutlineFeedback, MdContentCopy, MdCheck } from 'react-icons/md'; // Added MdCheck for tick mark
-import { RiRobot2Line } from 'react-icons/ri';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { okaidia } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import FeedbackPopup from './FeedbackPopup';
+import React, { useState, useEffect, useRef } from "react";
+import { FaRegUser } from "react-icons/fa";
+import { MdOutlineFeedback, MdContentCopy, MdCheck } from "react-icons/md"; // Added MdCheck for tick mark
+import { RiRobot2Line } from "react-icons/ri";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { okaidia } from "react-syntax-highlighter/dist/esm/styles/prism";
+import FeedbackPopup from "./FeedbackPopup";
 
 interface ChatMessageProps {
   message: any;
@@ -14,7 +14,7 @@ interface ChatMessageProps {
   isLoading?: boolean;
   isNew: boolean;
   onThumbsDown: (message: string) => void;
-  onTypingComplete?: () => void; 
+  onTypingComplete?: () => void;
   scrollToBottom: () => void; // Accept scrollToBottom as a prop
 }
 
@@ -25,14 +25,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isNew,
   onThumbsDown,
   onTypingComplete,
-  scrollToBottom // Scroll function passed as prop
+  scrollToBottom, // Scroll function passed as prop
 }) => {
-  const [displayedMessage, setDisplayedMessage] = useState<string>(isNew ? '' : message.content);
+  const [displayedMessage, setDisplayedMessage] = useState<string>(
+    isNew ? "" : message.content
+  );
   const [copied, setCopied] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
-    const content = typeof message === 'string' ? message : message.content;
+    const content = typeof message === "string" ? message : message.content;
 
     if (isNew && !isLoading) {
       let i = 0;
@@ -74,17 +76,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const handleFeedbackSubmit = (rating: number, feedback: string) => {
-    console.log('Rating:', rating, 'Feedback:', feedback);
+    console.log("Rating:", rating, "Feedback:", feedback);
     // Trigger backend function to save the feedback
   };
 
-  const messageStyle = type === 'user' ? 'bg-gray-200 text-black' : 'bg-custom_blue text-black';
+  const messageStyle =
+    type === "user" ? "bg-gray-200 text-black" : "bg-custom_blue text-black";
 
   return (
-    <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div
+      className={`flex ${type === "user" ? "justify-end" : "justify-start"} mb-4`}
+    >
       <div className="flex items-start space-x-2">
         <div className="flex-shrink-0">
-          {type === 'user' ? (
+          {type === "user" ? (
             <FaRegUser className="text-blue-500" size={24} />
           ) : (
             <RiRobot2Line className="text-green-500" size={24} />
@@ -100,10 +105,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 remarkPlugins={[remarkGfm]}
                 components={{
                   code({ node, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '');
+                    const match = /language-(\w+)/.exec(className || "");
                     return match ? (
-                      <SyntaxHighlighter style={okaidia} language={match[1]} PreTag="div" {...props}>
-                        {String(children).replace(/\n$/, '')}
+                      <SyntaxHighlighter
+                        style={okaidia}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, "")}
                       </SyntaxHighlighter>
                     ) : (
                       <code className={className} {...props}>
@@ -113,24 +123,36 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   },
                   a({ href, children, ...props }) {
                     return (
-                      <a href={href} className="text-blue-600 underline" {...props}>
+                      <a
+                        href={href}
+                        className="text-blue-600 underline"
+                        {...props}
+                      >
                         {children}
                       </a>
                     );
-                  }
+                  },
                 }}
               >
                 {displayedMessage}
               </ReactMarkdown>
-              {type === 'assistant' && (
+              {type === "assistant" && (
                 <div className="flex justify-end mt-2 space-x-4">
                   {/* Show tick mark when copied, else show copy icon */}
                   {copied ? (
                     <MdCheck className="text-white-500" size={20} />
                   ) : (
-                    <MdContentCopy className="cursor-pointer hover:text-gray-600" onClick={handleCopyToClipboard} size={20} />
+                    <MdContentCopy
+                      className="cursor-pointer hover:text-gray-600"
+                      onClick={handleCopyToClipboard}
+                      size={20}
+                    />
                   )}
-                  <MdOutlineFeedback className="cursor-pointer hover:text-gray-600" onClick={() => setIsFeedbackOpen(true)} size={20} />
+                  <MdOutlineFeedback
+                    className="cursor-pointer hover:text-gray-600"
+                    onClick={() => setIsFeedbackOpen(true)}
+                    size={20}
+                  />
                 </div>
               )}
             </>
