@@ -163,7 +163,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
 
     try {
       // Send message to backend and receive response
-      const response = await sendMessage(message, chat.messages);
+      const response = await sendMessage(message, chat.messages, chat.id);
       const updatedChatsWithResponse = updatedChatsWithLoading.map((chat) => {
         if (chat.id === id) {
           return {
@@ -257,7 +257,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       // Handle file processing
       if (allowedExtensions.includes(fileExtension)) {
         try {
-          const summary = await summarizeFile(file);
+          const summary = await summarizeFile(file, chat.id);
           const updatedChatsWithResponse = updatedChatsWithLoading.map((c) => {
             if (c.id === chat.id) {
               return {

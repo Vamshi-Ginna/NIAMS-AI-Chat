@@ -81,12 +81,20 @@ export const sendFeedback = async (messageId, rating, feedback) => {
   }
 };
 
-export const sendMessage = async (message, history) => {
+export const sendMessage = async (message, history, chatId) => {
   try {
-    const response = await api.post("/chat/send", {
-      message,
-      history: history.slice(-15), //only sending last 15 conversations
-    });
+    const response = await api.post(
+      "/chat/send",
+      {
+        message,
+        history: history.slice(-15), // only sending the last 15 conversations
+      },
+      {
+        headers: {
+          "Chat-Id": chatId, // Attach chatId in headers
+        },
+      }
+    );
     return response.data; // This will include message_id in the response
   } catch (error) {
     console.error("Error sending message:", error);
@@ -94,7 +102,7 @@ export const sendMessage = async (message, history) => {
   }
 };
 
-export const summarizeFile = async (file) => {
+export const summarizeFile = async (file, chatId) => {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -103,12 +111,25 @@ export const summarizeFile = async (file) => {
     const response = await api.post("/chat/upload_document", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        "Chat-Id": chatId, // Attach chatId in headers
         ...(token && { Authorization: `Bearer ${token}` }),
       },
     });
     return response.data.summary;
   } catch (error) {
     console.error("Error summarizing file:", error);
+    throw error;
+  }
+};
+
+export const cleanup_chat_sessions = async (chatIds) => {
+  try {
+    const response = await api.post("/chat/cleanup_chat_sessions", {
+      chat_ids: [...chatIds],
+    });
+    return response.data; // This will include message_id in the response
+  } catch (error) {
+    console.error("Error sending message:", error);
     throw error;
   }
 };

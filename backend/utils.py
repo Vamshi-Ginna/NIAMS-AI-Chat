@@ -21,6 +21,37 @@ import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
+
+# In-memory store for retrievers (can be replaced with Redis)
+retriever_store = {}
+
+def store_retriever(chat_id: str, retriever):
+    retriever_store[chat_id] = retriever
+
+def get_retriever(chat_id: str):
+    return retriever_store.get(chat_id)
+
+def delete_retriever(chat_id: str):
+    if chat_id in retriever_store:
+        del retriever_store[chat_id]
+
+# Store and retrieve documents (in-memory, can be replaced with Redis)
+document_store = {}
+
+def store_documents(chat_id: str, new_documents):
+    if chat_id in document_store:
+        document_store[chat_id] += new_documents
+    else:
+        document_store[chat_id] = new_documents
+
+def get_documents(chat_id: str):
+    return document_store.get(chat_id, [])
+
+def delete_documents(chat_id: str):
+    if chat_id in document_store:
+        del document_store[chat_id]
+
+
 def calculate_tokens(text):
     encoding = tiktoken.get_encoding('cl100k_base')
     return len(encoding.encode(text))
@@ -72,7 +103,7 @@ def get_retriever_from_docs(docs: List[Document], chunk_size: int = 2000, chunk_
 
     return db_retriever
 
-def summarize(file): 
+def summarize(file, chat_id): 
     file_name = file.filename
     logger.info("summarize function: %s", file_name) 
     extension = os.path.splitext(file_name)[1]
@@ -117,11 +148,18 @@ def summarize(file):
     else:
         raise ValueError("Unsupported file type")
 
-    chain = load_summarize_chain(llm, chain_type="stuff")
-    result = chain.invoke(docs)
     os.remove(temp_path)
 
-    retriever = get_retriever_from_docs(docs)
+     # Combine with existing documents for the chat_id
+    existing_docs = get_documents(chat_id)
+    combined_docs = existing_docs + docs
+    store_documents(chat_id, docs)  # Update document store with new docs
+
+    # Create retriever from combined documents
+    retriever = get_retriever_from_docs(combined_docs)
+
+    chain = load_summarize_chain(llm, chain_type="stuff")
+    result = chain.invoke(combined_docs)
 
     logger.info("#############################")
     logger.info("result : %s", result)
@@ -129,3 +167,4 @@ def summarize(file):
     logger.info("#############################")
 
     return result, retriever
+

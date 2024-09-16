@@ -16,6 +16,7 @@ import {
 import { IoDocumentTextSharp } from "react-icons/io5";
 import { v4 as uuidv4 } from "uuid";
 import { TbMessageFilled } from "react-icons/tb";
+import { cleanup_chat_sessions } from "../api/api";
 
 interface SidebarProps {
   chats: {
@@ -74,10 +75,20 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
     }
   };
 
-  const handleDeleteChat = (chatId: string) => {
+  const handleDeleteChat = async (chatId: string) => {
     if (window.confirm("Are you sure you want to delete this chat?")) {
-      setChats(chats.filter((chat) => chat.id !== chatId));
-      navigate("/");
+      try {
+        // Call the backend API to clean up the chat session
+        await cleanup_chat_sessions([chatId]);
+
+        // Remove the chat from the UI
+        setChats(chats.filter((chat) => chat.id !== chatId));
+
+        // Navigate back to the main page after deletion
+        navigate("/");
+      } catch (error) {
+        console.error("Error cleaning up chat session:", error);
+      }
     }
   };
 

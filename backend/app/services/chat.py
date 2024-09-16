@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, UploadFile, Request, Depends
 from app.models.chat import ChatRequest
 from app.models.bing_search import BingSearchRequest, BingSearchResult
-from utils import create_azure_client, calculate_tokens, summarize
+from utils import create_azure_client, calculate_tokens, summarize, store_retriever, get_retriever, store_documents, get_documents, delete_retriever, delete_documents
+from pydantic import BaseModel
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
@@ -16,12 +18,17 @@ import uuid
 chat_router = APIRouter()
 logger = logging.getLogger("chat_service")
 
+# Define request model for chat-ids list
+class CleanupRequest(BaseModel):
+    chat_ids: list[str]
+
 retriever = None  # Global variable to store the retriever
 
 @chat_router.post("/send")
 async def send_message(request: ChatRequest, req: Request, payload: dict = Depends(validate_token)):
     try:
         logger.info("send_message endpoint accessed with message: %s", request.message)
+        chat_id = req.headers.get("Chat-Id")  # Get chatId from headers
 
         # Get the database connection from the FastAPI app state
         db: Database = req.app.state.db
@@ -29,7 +36,9 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
         # Extract oid from the validated token payload
         user_id = payload.get("oid")
         
-        global retriever
+         # global retriever
+         # Get the retriever for this chat session
+        retriever = get_retriever(chat_id)
         context_text = ""
         if retriever:
             context = retriever.get_relevant_documents(request.message)
@@ -143,11 +152,15 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
 async def upload_document(file: UploadFile, req: Request, payload: dict = Depends(validate_token)):
     try:
         logger.info("upload_document endpoint accessed with file: %s", file.filename)
-        result, new_retriever = summarize(file)
+        chat_id = req.headers.get("Chat-Id")  # Get chatId from headers
+        result, new_retriever = summarize(file, chat_id)
         summary_text = result["output_text"]
 
-        global retriever
-        retriever = new_retriever  # Update the global retriever
+        # global retriever
+        # retriever = new_retriever  # Update the global retriever
+
+        # Store the updated retriever
+        store_retriever(chat_id, new_retriever)
 
         tokens = calculate_tokens(summary_text)
         cost = round((tokens / 1000) * 0.06, 2)
@@ -183,4 +196,26 @@ async def upload_document(file: UploadFile, req: Request, payload: dict = Depend
         }
     except Exception as e:
         logger.error("Error in upload_document: %s", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+@chat_router.post("/cleanup_chat_sessions")
+async def cleanup_sessions(request: CleanupRequest, req: Request, payload: dict = Depends(validate_token)):
+    try:
+        chat_ids = request.chat_ids
+        logger.info("Cleaning up sessions for chat-ids: %s", chat_ids)
+
+        # Iterate through each chat-id and delete associated retriever and documents
+        for chat_id in chat_ids:
+            # Delete retriever
+            delete_retriever(chat_id)
+            # Delete documents
+            delete_documents(chat_id)
+            logger.info("Cleaned  chat_ids: %s",chat_id )
+
+        return {"message": "Chat sessions cleaned up successfully.", "chat_ids_cleaned": chat_ids}
+    
+    except Exception as e:
+        logger.error("Error in cleanup_sessions: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
