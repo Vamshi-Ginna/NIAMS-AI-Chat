@@ -9,14 +9,10 @@ from app.services.bing_search import bing_router
 from app.services.login import login_router
 from app.services.token_validation import validate_token  # Import the token validation function from token_validation.py
 from app.database import Database
-import redis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Initialize Redis connection
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 app = FastAPI()
 
@@ -27,8 +23,6 @@ db.connect()
 # Pass the database instance to your routes
 app.state.db = db
 
-# Store Redis client in FastAPI state to access in routes
-app.state.redis = redis_client
 
 # CORS Configuration
 origins = os.getenv("CORS_ORIGINS", "").split(",")
