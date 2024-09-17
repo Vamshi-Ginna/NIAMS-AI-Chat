@@ -55,18 +55,18 @@ const App: React.FC = () => {
     }
   }, [accounts]); // Trigger whenever the `accounts` (multiple AD accounts) array changes
 
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      //event.returnValue = 'Your chat session data will be lost if you refresh or close the tab.';
-    };
+  // useEffect(() => {
+  //   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  //     event.preventDefault();
+  //     //event.returnValue = 'Your chat session data will be lost if you refresh or close the tab.';
+  //   };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
 
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //   };
+  // }, []);
 
   return (
     <MsalAuthenticationTemplate

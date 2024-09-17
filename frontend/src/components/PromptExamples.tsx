@@ -6,6 +6,10 @@ const PromptExamples: React.FC = () => {
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Specific Prompt Examples for Common Use Cases
       </h2>
+      <p className="mb-6">
+        Here are tailored prompt examples for some common NIH use cases to help
+        you effectively use the NIAMS AI ChatBot’s capabilities.
+      </p>
 
       {/* Text Summarization */}
       <div className="mb-8">
@@ -76,7 +80,7 @@ const PromptExamples: React.FC = () => {
         </div>
       </div>
 
-      {/* Simulating Specific Personas */}
+      {/* Simulating Specific Personas
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-indigo-600 mb-2">
           Simulating Specific Personas
@@ -96,7 +100,7 @@ const PromptExamples: React.FC = () => {
             research."
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Engaging in Technical Dialogues */}
       <div className="mb-8">
@@ -145,11 +149,11 @@ const PromptExamples: React.FC = () => {
       {/* General Knowledge and Trivia */}
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-indigo-600 mb-2">
-          General Knowledge and Trivia
+          General Knowledge
         </h3>
         <p className="text-gray-700 mb-4">
-          <strong>Purpose:</strong> Ask questions about general knowledge,
-          trivia, or facts on a wide range of topics.
+          <strong>Purpose:</strong> Ask questions about general knowledge, or
+          facts on a wide range of topics.
         </p>
         <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-gray-600">
@@ -162,6 +166,12 @@ const PromptExamples: React.FC = () => {
           </p>
         </div>
       </div>
+
+      <p>
+        These examples are designed to help NIAMS scientific and technical users
+        maximize the utility of the AI, whether for research, communication, or
+        creative exploration.
+      </p>
     </div>
   );
 };

@@ -24,57 +24,10 @@ const Training: React.FC = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
         <div className="p-8">
-          {/* Training Resources Section */}
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">
-            Training Resources
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Below are useful links to external resources that provide further
-            insights into the NIAMS AI platform, including official
-            documentation, blog posts, and tutorials to help you get started.
-          </p>
-
-          <ul className="space-y-4">
-            <li className="flex items-center">
-              <FiBookOpen className="text-indigo-600 text-2xl mr-3" />
-              <a
-                href="https://example.com/docs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 hover:underline"
-              >
-                Official Documentation
-              </a>
-            </li>
-            <li className="flex items-center">
-              <FiMessageCircle className="text-indigo-600 text-2xl mr-3" />
-              <a
-                href="https://example.com/blog"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 hover:underline"
-              >
-                Blog Post: How to Leverage AI for Efficiency
-              </a>
-            </li>
-            <li className="flex items-center">
-              <FiExternalLink className="text-indigo-600 text-2xl mr-3" />
-              <a
-                href="https://example.com/tutorials"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 hover:underline"
-              >
-                Tutorials and Guides
-              </a>
-            </li>
-          </ul>
-
-          <hr className="my-8" />
-
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-4 text-gray-800">
-              How to Write Effective Prompts for the Best AI Responses
+              How to Write Effective Prompts for the Best Artificial
+              Intelligence (AI) Responses
             </h2>
             <p className="text-lg text-gray-700">
               When interacting with the NIAMS AI chatbot, crafting clear and
@@ -87,7 +40,7 @@ const Training: React.FC = () => {
           {/* Best Practices Collapsible Section */}
           <div className="mb-8">
             <button
-              className="flex justify-between items-center w-full bg-indigo-600 text-white p-4 rounded-lg"
+              className="flex justify-between items-center w-full bg-pinkish text-black p-4 rounded-lg"
               onClick={() => setIsBestPracticesOpen(!isBestPracticesOpen)}
             >
               <span className="text-xl font-semibold">
@@ -109,7 +62,7 @@ const Training: React.FC = () => {
           {/* Specific Prompt Examples Collapsible Section */}
           <div className="mb-8">
             <button
-              className="flex justify-between items-center w-full bg-indigo-600 text-white p-4 rounded-lg"
+              className="flex justify-between items-center w-full bg-pinkish text-black p-4 rounded-lg"
               onClick={() => setIsPromptExamplesOpen(!isPromptExamplesOpen)}
             >
               <span className="text-xl font-semibold">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaDollarSign,
@@ -53,6 +53,45 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
   const totalCost = chats.reduce((acc, chat) => acc + chat.cost, 0);
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+
+  // Add effect for cleaning up chats on window close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Show confirmation dialog to the user
+      event.preventDefault();
+     // event.returnValue = ""; // This triggers the confirmation dialog in modern browsers
+
+      // Event listener for confirming the cleanup once the user accepts the reload/close
+      const cleanupOnUnload = async () => {
+        const chatIds = chats.map((chat) => chat.id);
+
+        if (chatIds.length > 0) {
+          try {
+            // Call the cleanup API to delete chat sessions on the backend
+            await cleanup_chat_sessions(chatIds);
+            console.log("All chats cleaned up successfully.");
+          } catch (error) {
+            console.error("Error cleaning up chats on page unload:", error);
+          }
+        }
+      };
+
+      // Attach the cleanup logic only if the user confirms they want to close/reload the page
+      window.addEventListener("unload", cleanupOnUnload);
+
+      // Clean up the event listener when the component unmounts
+      return () => {
+        window.removeEventListener("unload", cleanupOnUnload);
+      };
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [chats]);
 
   const handleNewChat = () => {
     const newChat = {
@@ -129,7 +168,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
           </div>
         )}
       </div>
-      <hr className="border-t-1 border-pinkish_dark" />
+      {/* <hr className="border-t-1 border-pinkish_dark" /> */}
       <div className="p-4 flex items-center">
         <button
           onClick={toggleSidebar}
@@ -159,7 +198,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
           </div>
         )}
       </div>
-      <hr className="border-t-1 border-pinkish_dark" />
+      {/* <hr className="border-t-1 border-pinkish_dark" /> */}
       {/* Navigation */}
       <nav className="my-6 ">
         <div className="flex flex-col">
@@ -193,7 +232,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
         </div>
       </nav>
 
-      <hr className="border-t-1 border-pinkish_dark" />
+      {/* <hr className="border-t-1 border-pinkish_dark" /> */}
 
       {/* Token Info */}
       {!isCollapsed && (
@@ -212,7 +251,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, setChats, userName }) => {
           </div>
         </div>
       )}
-      <hr className="border-t-1 border-pinkish_dark" />
+      {/* <hr className="border-t-1 border-pinkish_dark" /> */}
       {/* Chat List */}
       {!isCollapsed && (
         <div className="p-4 overflow-auto flex-1">
