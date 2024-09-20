@@ -14,6 +14,10 @@ from app.services.token_validation import validate_token
 from app.database import Database
 import logging
 import uuid
+#from fastapi.responses import EventSourceResponse
+from sse_starlette.sse import EventSourceResponse
+import asyncio
+import json
 
 chat_router = APIRouter()
 logger = logging.getLogger("chat_service")
@@ -23,6 +27,15 @@ class CleanupRequest(BaseModel):
     chat_ids: list[str]
 
 retriever = None  # Global variable to store the retriever
+
+
+
+# Helper function to stream Azure response
+async def stream_azure_response(create_completion, inputs):
+    async for chunk in await create_completion(messages=inputs["messages"], stream=True):
+        if chunk.choices and chunk.choices[0].delta.content is not None:
+            yield chunk.choices[0].delta.contentices[0].delta.content
+
 
 @chat_router.post("/send")
 async def send_message(request: ChatRequest, req: Request, payload: dict = Depends(validate_token)):
@@ -36,8 +49,7 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
         # Extract oid from the validated token payload
         user_id = payload.get("oid")
         
-         # global retriever
-         # Get the retriever for this chat session
+        # Get the retriever for this chat session
         retriever = get_retriever(chat_id)
         context_text = ""
         if retriever:
@@ -46,108 +58,111 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
 
         conversation_history = "\n".join([f"{msg.type.capitalize()}: {msg.content}" for msg in request.history])
 
-        # template = """You are a helpful assistant. Answer the question based on the provided context and conversation history. 
-        #               Provide a detailed response formatted in list of steps and bullet points
-        #               If context is empty, use your general knowledge. Do not guess answers. 
-        #               If you do not know the answer, say "Not Found".
-        #               Context: {context}
-        #               Conversation History: {history}
-        #               Question: {question}
-        #               Answer:"""
-            
         template = """You are an advanced AI assistant with expertise in a wide range of topics. Your task is to provide comprehensive, well-structured answers based on the given context, conversation history, and question. Your entire response must be formatted in Markdown. Follow these guidelines:
-
         1. Markdown Formatting:
-        - Use  Markdown syntax for all formatting. Your entire response should be valid Markdown.
+        - Use Markdown syntax for all formatting. Your entire response should be valid Markdown.
         - Give appropriate line spacing 
-
         2. Response Structure:
         - Begin with a # Heading summarizing your answer (1-2 sentences).
         - Organize your response into logical sections
-
         3. Content Guidelines:
         - Provide detailed explanations, drawing from the context if available, or your general knowledge if not.
         - Include relevant examples, analogies, or use cases to illustrate your points.
         - If applicable, mention pros and cons or different perspectives on the topic.
         - For technical topics, include code snippets in appropriate Markdown code blocks.
-
         4. Accuracy and Honesty:
         - Avoid making assumptions or guessing. Clearly state which parts of the question you can and cannot address.
-
         5. Engagement:
         - Add a conclusion section whenever required
         - End your response with a thought-provoking question or suggestion to promote user continue the conversation or ask th user if he has an further questions
-        
-
-        Remember, your entire response must be in valid Markdown format to ensure proper rendering in the user interface.
-
         Context: {context}
         Conversation History: {history}
         Question: {question}
-
         Markdown Response:
         """
+        
+          # Use the ChatPromptTemplate to generate the message to be sent
         prompt = ChatPromptTemplate.from_template(template)
-        output_parser = StrOutputParser()
-        setup_and_retrieval = RunnableParallel({"context": RunnablePassthrough(), "history": RunnablePassthrough(), "question": RunnablePassthrough()})
-        chain = setup_and_retrieval | prompt | create_azure_client() | output_parser
 
-        # Check if the request message contains specific keywords that may require a Bing search
-        keywords = ["latest", "current", "new"]
-        if any(keyword in request.message.lower() for keyword in keywords):
-            logger.info("Keywords detected in message, invoking Bing Search API.")
-            bing_response = await search_bing_endpoint(BingSearchRequest(query=request.message))
-            formatted_results = "\n\n".join(
-                [f"**{res.title}** - {res.link}\n{res.snippet}" for res in bing_response.results]
-            )
-            assistant_message = f"Bing Search Results:\n\n{formatted_results}"
-            source = "Bing"
-        else:
-            # Proceed with the LLM model if no keywords are detected
-            response = chain.invoke({"context": context_text, "history": conversation_history, "question": request.message})
+        # Apply the template with dynamic inputs
+        formatted_prompt = prompt.format(context=context_text, history=conversation_history, question=request.message)
 
-            source = "OpenAI"
-            if isinstance(response, str):
-                assistant_message = response
-            elif isinstance(response, dict) and "output_text" in response:
-                assistant_message = response["output_text"]
-            else:
-                raise ValueError("Unexpected response format from chain")
+        # Prepare the messages for the model (system prompt and user input)
+        messages = [
+            {"role": "system", "content": "You are an advanced AI assistant with expertise in a wide range of topics."},
+            {"role": "user", "content": formatted_prompt}
+        ]
 
-        user_tokens = calculate_tokens(request.message)
-        assistant_tokens = calculate_tokens(assistant_message)
-        total_tokens = user_tokens + assistant_tokens
-        cost = round((total_tokens / 1000) * 0.06, 2)
+        # Initialize the Azure OpenAI client with streaming enabled
+        create_completion = create_azure_client(streaming=True)
 
-        # Generate message IDs
-        message_id = str(uuid.uuid4())  
+        
+        async def event_generator(create_completion, messages, db, request, user_id):
+            total_tokens = calculate_tokens(request.message)  # Initial tokens for the user's message
 
+            try:
+                # Await the coroutine returned by create_completion
+                completion_response = await create_completion(messages=messages)
 
-        # Store the user prompt and assistant response in the chat_messages table
-        db.execute_query("""
-            INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (message_id, user_id, request.message, assistant_message, source))
+                if completion_response is None:
+                    logger.error("Completion response is None, possibly due to an API error.")
+                    yield f"data: {json.dumps({'error': 'No response from Azure OpenAI'})}\n\n"
+                    return
 
-         # Generate price ID
-        price_id = str(uuid.uuid4())  
+                async for chunk in completion_response:
+                   # Extract the content from the chunk
+                     if chunk.choices and chunk.choices[0].delta.content:
+                        content = chunk.choices[0].delta.content
+                        assistant_message += content  # Concatenate the content as string
+                        yield f"data: {json.dumps({'data': content})}\n\n" # Stream to frontend
+                                 
+                
+                # Once all chunks are streamed, calculate the total tokens and cost
+                total_tokens += calculate_tokens(assistant_message)
+                cost = round((total_tokens / 1000) * 0.06, 2)
 
-        # Store the price detials the price table
-        db.execute_query("""
-            INSERT INTO Price (price_id, message_id, completion_price)
-            VALUES (%s, %s, %s)
-        """, (price_id, message_id, cost))
+                message_id = str(uuid.uuid4())
+                price_id = str(uuid.uuid4())
 
-        return {
-            "response": assistant_message,
-            "message_id": message_id, 
-            "tokens": total_tokens,
-            "cost": cost
-        }
+                 # Send final response object after streaming completes
+                final_data = {
+                    "response": assistant_message,
+                    "message_id": message_id,
+                    "tokens": total_tokens,
+                    "cost": cost
+                }
+                
+                # Final event containing full response information 
+                yield f"data: {json.dumps({'data': final_data})}\n\n"
+
+                # Store the user prompt and assistant response in the chat_messages table
+                db.execute_query("""
+                    INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (message_id, user_id, request.message, assistant_message, "OpenAI"))
+
+                # Store the price details in the price table
+                db.execute_query("""
+                    INSERT INTO Price (price_id, message_id, completion_price)
+                    VALUES (%s, %s, %s)
+                    """, (price_id, message_id, cost))
+
+            except Exception as e:
+                logger.error(f"Error during streaming: {str(e)}")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+            finally:
+                # End the event stream
+                yield "data: [DONE]\n\n" 
+        
+        
+        logger.info("Before return statement")       
+        return EventSourceResponse(event_generator(create_completion,messages,db,request, user_id ))
+
     except Exception as e:
         logger.error("Error in send_message: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @chat_router.post("/upload_document")
 async def upload_document(file: UploadFile, req: Request, payload: dict = Depends(validate_token)):
     try:

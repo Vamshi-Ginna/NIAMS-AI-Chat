@@ -18,6 +18,7 @@ from langchain.chains.summarize import load_summarize_chain
 from config import Config
 import tiktoken
 import xml.etree.ElementTree as ET
+from openai import AsyncAzureOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -56,17 +57,28 @@ def calculate_tokens(text):
     encoding = tiktoken.get_encoding('cl100k_base')
     return len(encoding.encode(text))
 
-def create_azure_client(temperature: float = 0.7):
-    llm = AzureChatOpenAI(
-        azure_endpoint=Config.AZURE_OPENAI_API_ENDPOINT,
-        api_key=Config.AZURE_OPENAI_API_KEY,
-        model=Config.AZURE_OPENAI_MODEL_NAME,
-        azure_deployment=Config.AZURE_OPENAI_DEPLOYMENT_NAME,
-        api_version=Config.AZURE_OPENAI_API_VERSION,
-        temperature=temperature
+def create_azure_client(streaming: bool = False):
+    client = AsyncAzureOpenAI(
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+        azure_endpoint=os.getenv("AZURE_OPENAI_API_ENDPOINT")
     )
     
-    return llm
+    # Error handling during the request
+    async def create_chat_completion(messages: List[dict], **kwargs):
+        try:
+            # Handle streaming mode based on the flag
+            return await client.chat.completions.create(
+                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+                messages=messages,
+                stream=streaming,
+                **kwargs
+            )
+        except Exception as e:
+            # Log the error and re-raise or handle it gracefully
+            logger.error(f"Error during OpenAI completion: {str(e)}")
+            raise e
+    return create_chat_completion
 
 
 def create_embeddings_model() -> OpenAIEmbeddings:
