@@ -99,6 +99,7 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
         
         async def event_generator(create_completion, messages, db, request, user_id):
             total_tokens = calculate_tokens(request.message)  # Initial tokens for the user's message
+            assistant_message=""
 
             try:
                 # Await the coroutine returned by create_completion

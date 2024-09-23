@@ -81,6 +81,7 @@ export const sendFeedback = async (messageId, rating, feedback) => {
   }
 };
 
+//currently not in use. shift the code flow to streamMessage
 export const sendMessage = async (message, history, chatId) => {
   try {
     const response = await api.post(
@@ -99,6 +100,106 @@ export const sendMessage = async (message, history, chatId) => {
   } catch (error) {
     console.error("Error sending message:", error);
     throw error;
+  }
+};
+
+// Function to handle streaming the chat response using Server-Sent Events (SSE)
+export const streamMessage = async (
+  message,
+  history,
+  chatId,
+  onMessage,
+  onError,
+  onDone
+) => {
+  try {
+    const token = await getAccessToken(); // Fetch token before making the request
+
+    const response = await fetch(`${API_BASE_URL}/chat/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Add the Authorization header with the token
+        "Chat-Id": chatId, // Attach chatId in headers
+      },
+      body: JSON.stringify({
+        message,
+        history: history.slice(-15), // Send the last 15 messages
+      }),
+    });
+
+    // Check if the response is a stream
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let accumulatedMessage = "";
+
+    const processStream = async ({ done, value }) => {
+      if (done) {
+        onDone({ response: accumulatedMessage });
+        return;
+      }
+
+      // Decode the stream chunks
+      const chunk = decoder.decode(value, { stream: true });
+
+      // Process each line of the chunk
+      chunk.split("\n").forEach((line) => {
+        //console.log("Inside outer for loop");
+        //console.log(line);
+
+        if (line.startsWith("data:")) {
+          // Remove "data: " prefix and trim the line
+          //console.log("Line before cleaning");
+          //console.log(line);
+          line = line.replace("data: ", "").trim();
+          const cleanLine = line.replace("data: ", "").trim();
+
+          //console.log(cleanLine);
+          // console.log("Inside for each");
+          //console.log(cleanLine);
+
+          // Handle [DONE] case
+          if (cleanLine === "[DONE]") {
+            return; // No need to close the eventSource as we're not using EventSource
+          }
+
+          // Skip if the cleanLine is empty
+          if (!cleanLine) {
+            return;
+          }
+
+          try {
+            // Now safely parse the clean JSON data
+            //console.log("clean line before parsing");
+            //console.log(cleanLine);
+            const parsedData = JSON.parse(cleanLine);
+            // Process the parsed data
+            if (parsedData.data && !parsedData.data?.response) {
+              //console.log(parsedData.data);
+              onMessage(parsedData.data); // Call onMessage callback
+            }
+
+            if (parsedData.data?.response) {
+              console.log("Parsed data:", parsedData);
+              onDone(parsedData.data); // Call onDone callback when final response is received
+            }
+          } catch (error) {
+            console.error("Error parsing JSON in stream:", error, cleanLine);
+            onError(error); // Call error callback
+          }
+        }
+      });
+
+      // Recursively read the next chunk
+      reader.read().then(processStream);
+    };
+
+    // Start reading the stream
+    reader.read().then(processStream);
+  } catch (error) {
+    console.error("Error in fetch connection:", error);
+    onError(error); // Call the error callback
   }
 };
 
