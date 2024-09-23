@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ChatInput from "../components/ChatInput";
 import ChatMessage from "../components/ChatMessage";
-import { sendMessage, summarizeFile } from "../api/api";
+import { sendMessage, summarizeFile, streamMessage } from "../api/api";
 import PromptsAndInteractions from "../components/PromptsAndInteractions";
 import { v4 as uuidv4 } from "uuid";
 import jsPDF from "jspdf";
@@ -14,7 +14,6 @@ interface Message {
   type: string;
   content: string;
   message_id?: string;
-  isLoading?: boolean;
   isNew?: boolean;
 }
 
@@ -46,46 +45,33 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const chat = chats.find((chat) => chat.id === id);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Create a ref for the chat container
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
-  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true); // Track whether auto-scroll is enabled
-
+  //const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true); // Track whether auto-scroll is enabled
+  const eventSourceRef = useRef<EventSource | null>(null); // Ref for SSE
   // Function to scroll to the bottom of the chat
   const scrollToBottom = () => {
-    if (chatContainerRef.current && isAutoScrollEnabled) {
+    if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
   };
 
   // Function to detect user scroll and toggle auto-scroll
-  const handleScroll = () => {
-    if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        chatContainerRef.current;
-      const isAtBottom = scrollHeight - clientHeight <= scrollTop + 10; // Tolerance for floating point precision
+  // const handleScroll = () => {
+  //   if (chatContainerRef.current) {
+  //     const { scrollTop, scrollHeight, clientHeight } =
+  //       chatContainerRef.current;
+  //     const isAtBottom = scrollHeight - clientHeight <= scrollTop + 10; // Tolerance for floating point precision
 
-      if (isAtBottom) {
-        setIsAutoScrollEnabled(true); // Enable auto-scroll when the user scrolls to the bottom
-      } else {
-        setIsAutoScrollEnabled(false); // Disable auto-scroll when the user scrolls up
-      }
-    }
-  };
-  useEffect(() => {
-    const chatContainer = chatContainerRef.current;
-    if (chatContainer) {
-      chatContainer.addEventListener("scroll", handleScroll);
-    }
-
-    return () => {
-      if (chatContainer) {
-        chatContainer.removeEventListener("scroll", handleScroll);
-      }
-    };
-  }, []);
+  //     if (isAtBottom) {
+  //       setIsAutoScrollEnabled(true); // Enable auto-scroll when the user scrolls to the bottom
+  //     } else {
+  //       setIsAutoScrollEnabled(false); // Disable auto-scroll when the user scrolls up
+  //     }
+  //   }
+  // };
   useEffect(() => {
     scrollToBottom(); // Scroll to the bottom every time messages update
   }, [chat?.messages]);
@@ -122,6 +108,31 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
     }
   }, [chat, navigate]);
 
+  // Define the type for finalData
+  interface FinalResponseData {
+    message_id: string;
+    response: string;
+    tokens: number;
+    cost: number;
+  }
+  const typeWriterEffect = (
+    message: string,
+    callback: (char: string) => void,
+    delay = 50
+  ) => {
+    let index = 0;
+
+    // Create a function that will progressively display the message one character at a time
+    const typingInterval = setInterval(() => {
+      if (index < message.length) {
+        callback(message[index]);
+        index++;
+      } else {
+        clearInterval(typingInterval); // Clear the interval when done
+      }
+    }, delay);
+  };
+
   // Function to handle sending messages
   const handleSendMessage = async (message: string) => {
     if (!chat) return; // Prevent accessing undefined
@@ -137,6 +148,8 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
           messages: [
             ...chat.messages,
             { type: "user", content: message, isNew: true },
+            // Add an empty assistant message to update progressively
+            { type: "assistant", content: "...", isNew: true },
           ],
           showPrompts: false, // Hide prompts when a message is sent
         };
@@ -146,79 +159,108 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
 
     setChats(updatedChats);
 
-    // Show loading state for assistant response
-    const updatedChatsWithLoading = updatedChats.map((chat) => {
-      if (chat.id === id) {
-        return {
-          ...chat,
-          messages: [
-            ...chat.messages,
-            { type: "assistant", content: "...", isLoading: true, isNew: true },
-          ],
-        };
-      }
-      return chat;
-    });
-    setChats(updatedChatsWithLoading);
+    let assistantMessage = "";
 
-    try {
-      // Send message to backend and receive response
-      const response = await sendMessage(message, chat.messages, chat.id);
-      const updatedChatsWithResponse = updatedChatsWithLoading.map((chat) => {
-        if (chat.id === id) {
-          return {
-            ...chat,
-            messages: chat.messages.map((msg) =>
-              msg.isLoading
-                ? {
-                    type: "assistant",
-                    content: response.response,
-                    isNew: true,
-                    message_id: response.message_id,
-                  }
-                : { ...msg, isNew: false }
-            ),
-            tokens: chat.tokens + response.tokens,
-            cost: chat.cost + response.cost,
-          };
-        }
-        return chat;
-      });
-      setChats(updatedChatsWithResponse);
-    } catch (error) {
-      // Handle error during message sending
-      const updatedChatsWithError = updatedChatsWithLoading.map((chat) => {
-        if (chat.id === id) {
-          return {
-            ...chat,
-            messages: chat.messages.map((msg) =>
-              msg.isLoading
-                ? {
-                    type: "assistant",
-                    content: "Error: Unable to fetch response",
-                    isNew: false,
-                  }
-                : msg
-            ),
-          };
-        }
-        return chat;
-      });
-      setChats(updatedChatsWithError);
-    } finally {
-      setIsLoading(false);
-    }
+    // Stream the response from the backend
+    // Stream the response from the backend
+    streamMessage(
+      message,
+      chat?.messages || [],
+      chat.id,
+      (chunk: string) => {
+        // Accumulate the response chunks
+        assistantMessage += String(chunk);
+        //console.log(assistantMessage);
+
+        // Update the chat messages in the current state
+        setChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === id
+              ? {
+                  ...chat,
+                  messages: chat.messages.map((msg, index) =>
+                    // Find the last assistant message and update it with streamed chunks
+                    msg.type === "assistant" &&
+                    index === chat.messages.length - 1
+                      ? { ...msg, content: assistantMessage }
+                      : msg
+                  ),
+                }
+              : chat
+          )
+        );
+
+        scrollToBottom(); // Ensure chat scrolls down
+      },
+      (_error: any) => {
+        // Handle error
+        setChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === id
+              ? {
+                  ...chat,
+                  messages: chat.messages.map((msg, index) =>
+                    // Update the last assistant message with an error message
+                    msg.type === "assistant" &&
+                    index === chat.messages.length - 1
+                      ? { ...msg, content: "Error occurred" }
+                      : msg
+                  ),
+                }
+              : chat
+          )
+        );
+      },
+      (finalData: FinalResponseData) => {
+        // Final response with tokens and cost
+        console.log("Final Data invoked");
+        console.log(finalData);
+
+        // Logging the specific token and cost values
+        console.log("Tokens received:", finalData.tokens);
+        console.log("Cost received:", finalData.cost);
+        // Logging the specific token and cost values
+        console.log("Chat Tokens:", chat.tokens);
+        console.log("chat Cost:", chat.cost);
+
+        setChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === id
+              ? {
+                  ...chat,
+                  // Update the last assistant message (which contains the placeholder "...")
+                  messages: chat.messages.map((msg, index) =>
+                    msg.type === "assistant" && msg.content === "..."
+                      ? {
+                          ...msg,
+                          content: finalData.response, // Replace placeholder with actual Bing search response or LLM final message
+                          message_id: finalData.message_id, // Assign message ID
+                        }
+                      : msg
+                  ),
+                  // Ensure tokens and cost are always numbers and have valid fallback values
+                  tokens: (chat.tokens || 0) + (finalData.tokens || 0),
+                  cost: (chat.cost || 0) + (finalData.cost || 0),
+                }
+              : chat
+          )
+        );
+      }
+    );
   };
 
   // Function to handle file uploads
+  // Function to handle file uploads
   const handleFileChange = async (file: File) => {
-    if (!chat) return; // Add this check to prevent accessing undefined
+    if (!chat) return; // Prevent accessing undefined
 
     const allowedExtensions = ["pdf", "json", "docx", "txt", "md", "xml"];
     const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
 
     if (file && chat) {
       const userMessage = `File: ${file.name}`;
+
+      // Update chat with user's file message
       const updatedChats = chats.map((c) => {
         if (c.id === chat.id) {
           return {
@@ -226,23 +268,9 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
             messages: [
               ...c.messages,
               { type: "user", content: userMessage, isNew: true },
-            ],
-          };
-        }
-        return c;
-      });
-      setChats(updatedChats);
-
-      const updatedChatsWithLoading = updatedChats.map((c) => {
-        if (c.id === chat.id) {
-          return {
-            ...c,
-            messages: [
-              ...c.messages,
               {
                 type: "assistant",
-                content: "...",
-                isLoading: true,
+                content: "...", // Placeholder while waiting for the backend
                 isNew: true,
               },
             ],
@@ -250,20 +278,20 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
         }
         return c;
       });
-      setChats(updatedChatsWithLoading);
-
-      setIsLoading(true);
+      setChats(updatedChats);
 
       // Handle file processing
       if (allowedExtensions.includes(fileExtension)) {
         try {
-          const summary = await summarizeFile(file, chat.id);
-          const updatedChatsWithResponse = updatedChatsWithLoading.map((c) => {
+          const summary = await summarizeFile(file, chat.id); // Send file to backend for summarization
+
+          // Update chat with the summary from the backend
+          const updatedChatsWithResponse = updatedChats.map((c) => {
             if (c.id === chat.id) {
               return {
                 ...c,
-                messages: c.messages.map((msg) =>
-                  msg.isLoading
+                messages: c.messages.map((msg, index) =>
+                  msg.content === "..."
                     ? { type: "assistant", content: summary, isNew: true }
                     : { ...msg, isNew: false }
                 ),
@@ -274,12 +302,12 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
           setChats(updatedChatsWithResponse);
         } catch (error) {
           // Error handling for file processing
-          const updatedChatsWithError = updatedChatsWithLoading.map((c) => {
+          const updatedChatsWithError = updatedChats.map((c) => {
             if (c.id === chat.id) {
               return {
                 ...c,
-                messages: c.messages.map((msg) =>
-                  msg.isLoading
+                messages: c.messages.map((msg, index) =>
+                  msg.content === "..."
                     ? {
                         type: "assistant",
                         content: "Error: Unable to fetch summary",
@@ -292,18 +320,17 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
             return c;
           });
           setChats(updatedChatsWithError);
-        } finally {
-          setIsLoading(false);
         }
       } else {
         // Handle unsupported file types
         const errorMessage = `Invalid file type: ${file.name}. Please upload a valid file of type: .pdf, .json, .docx, .txt, .md, or .xml.`;
-        const updatedChatsWithError = updatedChatsWithLoading.map((c) => {
+
+        const updatedChatsWithError = updatedChats.map((c) => {
           if (c.id === chat.id) {
             return {
               ...c,
-              messages: c.messages.map((msg) =>
-                msg.isLoading
+              messages: c.messages.map((msg, index) =>
+                msg.content === "..."
                   ? { type: "assistant", content: errorMessage, isNew: true }
                   : { ...msg, isNew: false }
               ),
@@ -442,24 +469,8 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
             key={index}
             message={msg}
             type={msg.type}
-            isLoading={msg.isLoading}
-            isNew={msg.isNew || false}
             scrollToBottom={scrollToBottom}
             onThumbsDown={() => {}}
-            onTypingComplete={() => {
-              const updatedChats = chats.map((c) => {
-                if (c.id === chat.id) {
-                  return {
-                    ...c,
-                    messages: c.messages.map((message, i) =>
-                      i === index ? { ...message, isNew: false } : message
-                    ),
-                  };
-                }
-                return c;
-              });
-              setChats(updatedChats);
-            }}
           />
         ))}
       </div>

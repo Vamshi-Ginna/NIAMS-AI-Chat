@@ -38,6 +38,8 @@ const App: React.FC = () => {
             .reverse()
             .map((name) => name.trim())
             .join(" ")
+            .replace(/[\[\(].*?[\]\)]/g, "") //removing (NIH/NIAMS)[E]
+            .trim()
         : "Guest"
       : "Guest";
 
