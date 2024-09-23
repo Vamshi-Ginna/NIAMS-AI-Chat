@@ -111,9 +111,27 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   // Define the type for finalData
   interface FinalResponseData {
     message_id: string;
+    response: string;
     tokens: number;
     cost: number;
   }
+  const typeWriterEffect = (
+    message: string,
+    callback: (char: string) => void,
+    delay = 50
+  ) => {
+    let index = 0;
+
+    // Create a function that will progressively display the message one character at a time
+    const typingInterval = setInterval(() => {
+      if (index < message.length) {
+        callback(message[index]);
+        index++;
+      } else {
+        clearInterval(typingInterval); // Clear the interval when done
+      }
+    }, delay);
+  };
 
   // Function to handle sending messages
   const handleSendMessage = async (message: string) => {
@@ -210,9 +228,14 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
             chat.id === id
               ? {
                   ...chat,
-                  messages: chat.messages.map((msg) =>
-                    msg.content === assistantMessage
-                      ? { ...msg, message_id: finalData.message_id }
+                  // Update the last assistant message (which contains the placeholder "...")
+                  messages: chat.messages.map((msg, index) =>
+                    msg.type === "assistant" && msg.content === "..."
+                      ? {
+                          ...msg,
+                          content: finalData.response, // Replace placeholder with actual Bing search response or LLM final message
+                          message_id: finalData.message_id, // Assign message ID
+                        }
                       : msg
                   ),
                   // Ensure tokens and cost are always numbers and have valid fallback values

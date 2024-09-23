@@ -128,75 +128,93 @@ export const streamMessage = async (
       }),
     });
 
-    // Check if the response is a stream
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder("utf-8");
+    // Check if the response is a stream or full JSON
+    const contentType = response.headers.get("Content-Type");
 
-    let accumulatedMessage = "";
+    if (contentType && contentType.includes("application/json")) {
+      // Handle Bing Search API response or any full JSON response
+      const jsonData = await response.json();
 
-    const processStream = async ({ done, value }) => {
-      if (done) {
-        onDone({ response: accumulatedMessage });
-        return;
+      console.log("Inside if condition");
+      console.log(jsonData);
+      // Check if the response is Bing Search or LLM
+      if (jsonData.data?.response) {
+        onDone(jsonData.data); // Final full response (Bing search)
+      } else {
+        // If any other data from JSON (handle accordingly)
+        onMessage(jsonData.data);
       }
+    } else if (response.body) {
+      // Process streaming response from LLM
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
 
-      // Decode the stream chunks
-      const chunk = decoder.decode(value, { stream: true });
+      let accumulatedMessage = "";
 
-      // Process each line of the chunk
-      chunk.split("\n").forEach((line) => {
-        //console.log("Inside outer for loop");
-        //console.log(line);
-
-        if (line.startsWith("data:")) {
-          // Remove "data: " prefix and trim the line
-          //console.log("Line before cleaning");
-          //console.log(line);
-          line = line.replace("data: ", "").trim();
-          const cleanLine = line.replace("data: ", "").trim();
-
-          //console.log(cleanLine);
-          // console.log("Inside for each");
-          //console.log(cleanLine);
-
-          // Handle [DONE] case
-          if (cleanLine === "[DONE]") {
-            return; // No need to close the eventSource as we're not using EventSource
-          }
-
-          // Skip if the cleanLine is empty
-          if (!cleanLine) {
-            return;
-          }
-
-          try {
-            // Now safely parse the clean JSON data
-            //console.log("clean line before parsing");
-            //console.log(cleanLine);
-            const parsedData = JSON.parse(cleanLine);
-            // Process the parsed data
-            if (parsedData.data && !parsedData.data?.response) {
-              //console.log(parsedData.data);
-              onMessage(parsedData.data); // Call onMessage callback
-            }
-
-            if (parsedData.data?.response) {
-              console.log("Parsed data:", parsedData);
-              onDone(parsedData.data); // Call onDone callback when final response is received
-            }
-          } catch (error) {
-            console.error("Error parsing JSON in stream:", error, cleanLine);
-            onError(error); // Call error callback
-          }
+      const processStream = async ({ done, value }) => {
+        if (done) {
+          onDone({ response: accumulatedMessage });
+          return;
         }
-      });
 
-      // Recursively read the next chunk
+        // Decode the stream chunks
+        const chunk = decoder.decode(value, { stream: true });
+
+        // Process each line of the chunk
+        chunk.split("\n").forEach((line) => {
+          //console.log("Inside outer for loop");
+          //console.log(line);
+
+          if (line.startsWith("data:")) {
+            // Remove "data: " prefix and trim the line
+            //console.log("Line before cleaning");
+            //console.log(line);
+            line = line.replace("data: ", "").trim();
+            const cleanLine = line.replace("data: ", "").trim();
+
+            //console.log(cleanLine);
+            // console.log("Inside for each");
+            //console.log(cleanLine);
+
+            // Handle [DONE] case
+            if (cleanLine === "[DONE]") {
+              return; // No need to close the eventSource as we're not using EventSource
+            }
+
+            // Skip if the cleanLine is empty
+            if (!cleanLine) {
+              return;
+            }
+
+            try {
+              // Now safely parse the clean JSON data
+              //console.log("clean line before parsing");
+              //console.log(cleanLine);
+              const parsedData = JSON.parse(cleanLine);
+              // Process the parsed data
+              if (parsedData.data && !parsedData.data?.response) {
+                //console.log(parsedData.data);
+                onMessage(parsedData.data); // Call onMessage callback
+              }
+
+              if (parsedData.data?.response) {
+                console.log("Parsed data:", parsedData);
+                onDone(parsedData.data); // Call onDone callback when final response is received
+              }
+            } catch (error) {
+              console.error("Error parsing JSON in stream:", error, cleanLine);
+              onError(error); // Call error callback
+            }
+          }
+        });
+
+        // Recursively read the next chunk
+        reader.read().then(processStream);
+      };
+
+      // Start reading the stream
       reader.read().then(processStream);
-    };
-
-    // Start reading the stream
-    reader.read().then(processStream);
+    }
   } catch (error) {
     console.error("Error in fetch connection:", error);
     onError(error); // Call the error callback

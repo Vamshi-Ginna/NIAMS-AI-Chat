@@ -10,6 +10,7 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from app.services.bing_search import search_bing_endpoint
 import logging
 from app.services.token_validation import validate_token
+from fastapi.responses import JSONResponse
 
 from app.database import Database
 import logging
@@ -36,7 +37,6 @@ async def stream_azure_response(create_completion, inputs):
         if chunk.choices and chunk.choices[0].delta.content is not None:
             yield chunk.choices[0].delta.contentices[0].delta.content
 
-
 @chat_router.post("/send")
 async def send_message(request: ChatRequest, req: Request, payload: dict = Depends(validate_token)):
     try:
@@ -58,6 +58,7 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
 
         conversation_history = "\n".join([f"{msg.type.capitalize()}: {msg.content}" for msg in request.history])
 
+        # Define a prompt for LLM-based responses
         template = """You are an advanced AI assistant with expertise in a wide range of topics. Your task is to provide comprehensive, well-structured answers based on the given context, conversation history, and question. Your entire response must be formatted in Markdown. Follow these guidelines:
         1. Markdown Formatting:
         - Use Markdown syntax for all formatting. Your entire response should be valid Markdown.
@@ -80,89 +81,114 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
         Question: {question}
         Markdown Response:
         """
-        
-          # Use the ChatPromptTemplate to generate the message to be sent
-        prompt = ChatPromptTemplate.from_template(template)
 
-        # Apply the template with dynamic inputs
+        # Use the ChatPromptTemplate to generate the message to be sent
+        prompt = ChatPromptTemplate.from_template(template)
         formatted_prompt = prompt.format(context=context_text, history=conversation_history, question=request.message)
 
-        # Prepare the messages for the model (system prompt and user input)
-        messages = [
-            {"role": "system", "content": "You are an advanced AI assistant with expertise in a wide range of topics."},
-            {"role": "user", "content": formatted_prompt}
-        ]
+        # Check if the request message contains specific keywords that may require a Bing search
+        keywords = ["latest", "newest", "current"]
+        if any(keyword in request.message.lower() for keyword in keywords):
+            logger.info("Keywords detected in message, invoking Bing Search API.")
+            bing_response = await search_bing_endpoint(BingSearchRequest(query=request.message))
+            formatted_results = "\n\n".join(
+                [f"**{res.title}** - {res.link}\n{res.snippet}" for res in bing_response.results]
+            )
+            assistant_message = f"Bing Search Results:\n\n{formatted_results}"
+            source = "Bing"
 
-        # Initialize the Azure OpenAI client with streaming enabled
-        create_completion = create_azure_client(streaming=True)
+             # Generate message IDs
+            message_id = str(uuid.uuid4())
 
-        
-        async def event_generator(create_completion, messages, db, request, user_id):
-            total_tokens = calculate_tokens(request.message)  # Initial tokens for the user's message
-            assistant_message=""
+            # Save Bing Search Response to the database
+            db.execute_query("""
+                INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (message_id, user_id, request.message, assistant_message, source))
 
-            try:
-                # Await the coroutine returned by create_completion
-                completion_response = await create_completion(messages=messages)
+            # Send Bing search response directly to the frontend
+            final_data = {
+                "response": assistant_message,
+                "message_id": str(uuid.uuid4()),
+                "tokens": 0,  # No tokens for Bing Search
+                "cost": 0  # No cost for Bing Search
+            }
 
-                if completion_response is None:
-                    logger.error("Completion response is None, possibly due to an API error.")
-                    yield f"data: {json.dumps({'error': 'No response from Azure OpenAI'})}\n\n"
-                    return
+            print(final_data)
+            return JSONResponse(content={"data": final_data})
 
-                async for chunk in completion_response:
-                   # Extract the content from the chunk
-                     if chunk.choices and chunk.choices[0].delta.content:
-                        content = chunk.choices[0].delta.content
-                        assistant_message += content  # Concatenate the content as string
-                        yield f"data: {json.dumps({'data': content})}\n\n" # Stream to frontend
-                                 
-                
-                # Once all chunks are streamed, calculate the total tokens and cost
-                total_tokens += calculate_tokens(assistant_message)
-                cost = round((total_tokens / 1000) * 0.06, 2)
+        else:
+            # If no keywords detected, proceed with the LLM model
+            messages = [
+                {"role": "system", "content": "You are an advanced AI assistant with expertise in a wide range of topics."},
+                {"role": "user", "content": formatted_prompt}
+            ]
 
-                message_id = str(uuid.uuid4())
-                price_id = str(uuid.uuid4())
+            # Initialize the Azure OpenAI client with streaming enabled
+            create_completion = create_azure_client(streaming=True)
 
-                 # Send final response object after streaming completes
-                final_data = {
-                    "response": assistant_message,
-                    "message_id": message_id,
-                    "tokens": total_tokens,
-                    "cost": cost
-                }
-                
-                # Final event containing full response information 
-                yield f"data: {json.dumps({'data': final_data})}\n\n"
+            async def event_generator(create_completion, messages, db, request, user_id):
+                total_tokens = calculate_tokens(request.message)  # Initial tokens for the user's message
+                assistant_message = ""
 
-                # Store the user prompt and assistant response in the chat_messages table
-                db.execute_query("""
-                    INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (message_id, user_id, request.message, assistant_message, "OpenAI"))
+                try:
+                    # Await the coroutine returned by create_completion
+                    completion_response = await create_completion(messages=messages)
 
-                # Store the price details in the price table
-                db.execute_query("""
-                    INSERT INTO Price (price_id, message_id, completion_price)
-                    VALUES (%s, %s, %s)
+                    if completion_response is None:
+                        logger.error("Completion response is None, possibly due to an API error.")
+                        yield f"data: {json.dumps({'error': 'No response from Azure OpenAI'})}\n\n"
+                        return
+
+                    async for chunk in completion_response:
+                        if chunk.choices and chunk.choices[0].delta.content:
+                            content = chunk.choices[0].delta.content
+                            assistant_message += content  # Concatenate the content as string
+                            yield f"data: {json.dumps({'data': content})}\n\n"  # Stream to frontend
+
+                    # Once all chunks are streamed, calculate the total tokens and cost
+                    total_tokens += calculate_tokens(assistant_message)
+                    cost = round((total_tokens / 1000) * 0.06, 2)
+
+                    message_id = str(uuid.uuid4())
+                    price_id = str(uuid.uuid4())
+
+                    # Send final response object after streaming completes
+                    final_data = {
+                        "response": assistant_message,
+                        "message_id": message_id,
+                        "tokens": total_tokens,
+                        "cost": cost
+                    }
+
+                    yield f"data: {json.dumps({'data': final_data})}\n\n"
+
+                    # Store the user prompt and assistant response in the chat_messages table
+                    db.execute_query("""
+                        INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (message_id, user_id, request.message, assistant_message, "OpenAI"))
+
+                    # Store the price details in the price table
+                    db.execute_query("""
+                        INSERT INTO Price (price_id, message_id, completion_price)
+                        VALUES (%s, %s, %s)
                     """, (price_id, message_id, cost))
 
-            except Exception as e:
-                logger.error(f"Error during streaming: {str(e)}")
-                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                except Exception as e:
+                    logger.error(f"Error during streaming: {str(e)}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-            finally:
-                # End the event stream
-                yield "data: [DONE]\n\n" 
-        
-        
-        logger.info("Before return statement")       
-        return EventSourceResponse(event_generator(create_completion,messages,db,request, user_id ))
+                finally:
+                    # End the event stream
+                    yield "data: [DONE]\n\n"
+
+            return EventSourceResponse(event_generator(create_completion, messages, db, request, user_id))
 
     except Exception as e:
         logger.error("Error in send_message: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @chat_router.post("/upload_document")
 async def upload_document(file: UploadFile, req: Request, payload: dict = Depends(validate_token)):
