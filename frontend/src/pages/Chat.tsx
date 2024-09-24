@@ -8,7 +8,8 @@ import { sendMessage, summarizeFile, streamMessage } from "../api/api";
 import PromptsAndInteractions from "../components/PromptsAndInteractions";
 import { v4 as uuidv4 } from "uuid";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+
+import { useInView } from "react-intersection-observer";
 
 interface Message {
   type: string;
@@ -48,33 +49,84 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
 
   // Create a ref for the chat container
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+  const [isAssistantMessageInProgress, setIsAssistantMessageInProgress] =
+    useState(false); // Track message progress
+
   //const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true); // Track whether auto-scroll is enabled
-  const eventSourceRef = useRef<EventSource | null>(null); // Ref for SSE
+  //const eventSourceRef = useRef<EventSource | null>(null); // Ref for SSE
+  //const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track timeout for debounced scroll handling
+
+  // Add the Intersection Observer hook for detecting when user is at the bottom
+  const { ref: bottomRef, inView: isBottomInView } = useInView({
+    threshold: 0.1, // Adjust the threshold if necessary
+  });
+
   // Function to scroll to the bottom of the chat
   const scrollToBottom = () => {
-    if (chatContainerRef.current) {
+    if (chatContainerRef.current && isAutoScrollEnabled) {
+      console.log("Scrolling to bottom...");
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
+    } else {
+      console.log("Auto-scroll is disabled, not scrolling.");
     }
   };
 
-  // Function to detect user scroll and toggle auto-scroll
-  // const handleScroll = () => {
-  //   if (chatContainerRef.current) {
-  //     const { scrollTop, scrollHeight, clientHeight } =
-  //       chatContainerRef.current;
-  //     const isAtBottom = scrollHeight - clientHeight <= scrollTop + 10; // Tolerance for floating point precision
-
-  //     if (isAtBottom) {
-  //       setIsAutoScrollEnabled(true); // Enable auto-scroll when the user scrolls to the bottom
-  //     } else {
-  //       setIsAutoScrollEnabled(false); // Disable auto-scroll when the user scrolls up
-  //     }
-  //   }
-  // };
+  // Log scrolling state and isBottomInView whenever it changes
   useEffect(() => {
-    scrollToBottom(); // Scroll to the bottom every time messages update
-  }, [chat?.messages]);
+    console.log("isBottomInView: ", isBottomInView);
+    console.log("isAutoScrollEnabled: ", isAutoScrollEnabled);
+  }, [isBottomInView, isAutoScrollEnabled]);
+
+  useEffect(() => {
+    // Only scroll to bottom if auto-scroll is enabled
+    if (isAutoScrollEnabled) {
+      scrollToBottom();
+    } else {
+      console.log(
+        "Auto-scroll is disabled, not scrolling to bottom on new message."
+      );
+    }
+  }, [chats, isAutoScrollEnabled]);
+
+  // Handle when user manually scrolls
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        chatContainerRef.current;
+      const isUserAtBottom = scrollHeight - clientHeight <= scrollTop + 50;
+
+      if (!isUserAtBottom) {
+        // Disable auto-scroll if user scrolled up
+        setIsAutoScrollEnabled(false);
+        console.log("User scrolled up, disabling auto-scroll.");
+      } else {
+        // Only re-enable auto-scroll when the user reaches the bottom
+        setIsAutoScrollEnabled(true);
+        console.log("User reached the bottom, enabling auto-scroll.");
+      }
+    }
+  };
+
+  // React to the user reaching the bottom of the chat
+  useEffect(() => {
+    if (isBottomInView) {
+      // Re-enable auto-scroll when user is back at the bottom
+      setIsAutoScrollEnabled(true);
+      console.log("User is at the bottom, enabling auto-scroll.");
+    }
+  }, [isBottomInView]);
+
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      chatContainer.addEventListener("scroll", handleScroll);
+      return () => {
+        chatContainer.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, []);
 
   // Initialize a new chat if no chat is found or the current chat is invalid
   useEffect(() => {
@@ -158,6 +210,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
     });
 
     setChats(updatedChats);
+    setIsAssistantMessageInProgress(true); // Start streaming, set flag to true
 
     let assistantMessage = "";
 
@@ -190,7 +243,10 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
           )
         );
 
-        scrollToBottom(); // Ensure chat scrolls down
+        if (isBottomInView) {
+          console.log("Inside set function");
+          scrollToBottom(); // Only scroll to bottom if auto-scroll is enabled
+        }
       },
       (_error: any) => {
         // Handle error
@@ -210,19 +266,9 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
               : chat
           )
         );
+        setIsAssistantMessageInProgress(false); // Error occurred, reset flag
       },
       (finalData: FinalResponseData) => {
-        // Final response with tokens and cost
-        console.log("Final Data invoked");
-        console.log(finalData);
-
-        // Logging the specific token and cost values
-        console.log("Tokens received:", finalData.tokens);
-        console.log("Cost received:", finalData.cost);
-        // Logging the specific token and cost values
-        console.log("Chat Tokens:", chat.tokens);
-        console.log("chat Cost:", chat.cost);
-
         setChats((prevChats) =>
           prevChats.map((chat) =>
             chat.id === id
@@ -245,11 +291,11 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
               : chat
           )
         );
+        setIsAssistantMessageInProgress(false); // Finished streaming, reset flag
       }
     );
   };
 
-  // Function to handle file uploads
   // Function to handle file uploads
   const handleFileChange = async (file: File) => {
     if (!chat) return; // Prevent accessing undefined
@@ -342,32 +388,6 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       }
     }
   };
-
-  // Handle thumbs down feedback
-  const handleThumbsDown = (message: string) => {
-    console.log("Thumbs down clicked for message:", message);
-    // Implement feedback submission logic here
-  };
-
-  // Function to download the chat as PDF
-  // const handleDownloadChat = async () => {
-  //   if (!chat) return;
-
-  //   console.log(JSON.stringify(chat))
-  //   const input = document.getElementById('chat-content') as HTMLElement;
-  //   const canvas = await html2canvas(input);
-  //   const imgData = canvas.toDataURL('image/png');
-  //   const pdf = new jsPDF();
-
-  //   pdf.text(`Chat: ${chat.name}`, 10, 10);
-  //   pdf.text(`Tokens: ${chat.tokens}`, 10, 20);
-  //   pdf.text(`Cost: $${chat.cost.toFixed(2)}`, 10, 30);
-
-  //   pdf.addImage(imgData, 'PNG', 0, 40, 210, 297); // Adjust dimensions
-  //   pdf.save(`${chat.name}.pdf`);
-  // };
-
-  // Function to download the chat as PDF
 
   const handleDownloadChat = () => {
     if (!chat) return;
@@ -473,6 +493,8 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
             onThumbsDown={() => {}}
           />
         ))}
+        {/* Ref element for detecting when at the bottom */}
+        <div ref={bottomRef} style={{ height: "1px" }} />
       </div>
 
       {/* Chat Input */}
@@ -481,6 +503,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
           onSendMessage={handleSendMessage}
           onFileChange={handleFileChange}
           onDownloadChat={handleDownloadChat}
+          isAssistantMessageInProgress={isAssistantMessageInProgress} // Pass the flag here
         />
       )}
 

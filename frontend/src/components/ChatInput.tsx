@@ -6,13 +6,15 @@ import html2canvas from "html2canvas";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   onFileChange: (file: File) => void;
-  onDownloadChat: () => void; // New prop for download functionality
+  onDownloadChat: () => void;
+  isAssistantMessageInProgress: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
   onFileChange,
   onDownloadChat,
+  isAssistantMessageInProgress,
 }) => {
   const [input, setInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +37,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleSendMessage = () => {
-    if (input.trim()) {
+    if (input.trim() && !isAssistantMessageInProgress) {
       onSendMessage(input.trim());
       setInput("");
     }
@@ -114,10 +116,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <button
             onClick={handleSendMessage}
             className={`p-2 rounded-full transition-all focus:outline-none ${
-              input.trim()
+              input.trim() && !isAssistantMessageInProgress
                 ? "bg-pinkish_dark text-white"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
+            disabled={isAssistantMessageInProgress}
             onMouseEnter={() => setShowSendTooltip(true)}
             onMouseLeave={() => setShowSendTooltip(false)}
           >
