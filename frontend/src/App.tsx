@@ -34,12 +34,12 @@ const App: React.FC = () => {
     accounts.length > 0
       ? accounts[0].name
         ? accounts[0].name
-            .split(",")
-            .reverse()
-            .map((name) => name.trim())
-            .join(" ")
-            .replace(/[\[\(].*?[\]\)]/g, "") //removing (NIH/NIAMS)[E]
-            .trim()
+            .replace(/[\[\(].*?[\]\)]/g, "") // Remove content within parentheses and brackets
+            .trim() // Trim the string after removal
+            .split(",") // Split by comma
+            .reverse() // Reverse the names
+            .map((name) => name.trim()) // Trim each part
+            .join(" ") // Join the names with a space
         : "Guest"
       : "Guest";
 

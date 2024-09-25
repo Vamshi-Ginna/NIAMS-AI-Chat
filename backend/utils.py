@@ -57,7 +57,7 @@ def calculate_tokens(text):
     encoding = tiktoken.get_encoding('cl100k_base')
     return len(encoding.encode(text))
 
-def create_azure_client(streaming: bool = False):
+def create_azure_client(streaming: bool = False, temperature: float = 0.7):
     client = AsyncAzureOpenAI(
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
@@ -72,6 +72,7 @@ def create_azure_client(streaming: bool = False):
                 model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
                 messages=messages,
                 stream=streaming,
+                temperature=temperature, 
                 **kwargs
             )
         except Exception as e:
