@@ -11,11 +11,15 @@ class Database:
         self.connection = None
     
     def connect(self):
+         #Ensure the connection is established and ready to be used.
+        if self.connection and self.connection.is_connected():
+            return  # Avoid reconnecting if already connected
         try:
             self.connection = mysql.connector.connect(
                 host=Config.MY_SQL_HOST,
                 user=Config.MY_SQL_USER,
                 password=Config.MY_SQL_PASSWORD,
+                database=Config.MY_SQL_DB 
             )
             if self.connection.is_connected():
                 logger.info("Successfully connected to MySQL")
@@ -24,6 +28,14 @@ class Database:
             logger.error("Error while connecting to MySQL: %s", e)
             raise
 
+    def column_exists(self, cursor, table_name, column_name):
+        
+        #Check if a specific column exists in a table.
+        query = f"SHOW COLUMNS FROM {table_name} LIKE '{column_name}'"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        return result is not None
+    
     def database_exists(self, cursor, db_name):
         cursor.execute(f"SHOW DATABASES LIKE '{db_name}'")
         result = cursor.fetchone()
@@ -51,6 +63,7 @@ class Database:
                     CREATE TABLE Users (
                         user_id CHAR(36) PRIMARY KEY, 
                         name VARCHAR(255) NOT NULL,
+                        group_name VARCHAR(255) DEFAULT NULL,       
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
                     )
                 """)
@@ -67,6 +80,7 @@ class Database:
                         user_prompt TEXT NOT NULL,
                         response TEXT NOT NULL,
                         source ENUM('OpenAI', 'Bing', 'Document') NOT NULL,
+                        category VARCHAR(255) DEFAULT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                         FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL
                     )
@@ -115,6 +129,34 @@ class Database:
         finally:
             cursor.close()
 
+    def run_migration(self):
+
+        #Add columns to Users and Chat_Messages tables if they don't already exist.
+        cursor = self.connection.cursor()
+        try:
+            # Check and add group_name column to Users table
+            if not self.column_exists(cursor, 'Users', 'group_name'):
+                cursor.execute("ALTER TABLE Users ADD COLUMN group_name VARCHAR(255) DEFAULT NULL;")
+                logger.info("Added `group_name` column to Users table.")
+            else:
+                logger.info("Column `group_name` already exists in Users table.")
+
+            # Check and add category column to Chat_Messages table
+            if not self.column_exists(cursor, 'Chat_Messages', 'category'):
+                cursor.execute("ALTER TABLE Chat_Messages ADD COLUMN category VARCHAR(255) DEFAULT NULL;")
+                logger.info("Added `category` column to Chat_Messages table.")
+            else:
+                logger.info("Column `category` already exists in Chat_Messages table.")
+
+            # Commit changes
+            self.connection.commit()
+        except Error as e:
+            logger.error("Error while running migration: %s", e)
+            raise
+        finally:
+            cursor.close()
+    
+    
     def execute_query(self, query, values=None):
         cursor = self.connection.cursor()
         try:
@@ -126,7 +168,9 @@ class Database:
         finally:
             cursor.close()
 
-    def __del__(self):
+    #def __del__(self):
+    def close(self):
+        #Close the connection when the app is shutting down.
         if self.connection and self.connection.is_connected():
             self.connection.close()
             logger.info("MySQL connection closed.")

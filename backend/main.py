@@ -23,6 +23,9 @@ db.connect()
 # Pass the database instance to your routes
 app.state.db = db
 
+# Run migration script to add any changes to the database
+db.run_migration()
+
 
 # CORS Configuration
 origins = os.getenv("CORS_ORIGINS", "").split(",")
@@ -45,3 +48,9 @@ app.include_router(login_router, prefix="/auth", tags=["auth"], dependencies=[De
 def read_root():
     logger.info("Root endpoint accessed")
     return {"message": "Welcome to the Azure OpenAI Chat API"}
+
+
+# Close the database connection on shutdown
+@app.on_event("shutdown")
+def shutdown():
+    app.state.db.close()
