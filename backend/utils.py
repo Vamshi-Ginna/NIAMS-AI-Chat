@@ -19,6 +19,7 @@ from config import Config
 import tiktoken
 import xml.etree.ElementTree as ET
 from openai import AsyncAzureOpenAI
+from app.database import Database
 
 logger = logging.getLogger(__name__)
 
@@ -181,3 +182,48 @@ def summarize(file, chat_id):
 
     return result, retriever
 
+
+
+# New function to classify the message category using LLM (non-streaming)
+async def classify_message_category(user_message: str, message_id: str, db: Database):
+    try:
+        logger.info("Classifying message category for message: %s", user_message)
+
+       # Construct the prompt for message category classification
+        classification_prompt = f"""
+        Classify the following message into one of the following categories:
+        - Text Summarization
+        - Creative Content Generation
+        - Language Translation
+        - Technical Dialogue
+        - General Knowledge
+
+        Return only the category name without any numbering or punctuation.
+
+        Message: {user_message}
+        """
+        
+        # Initialize non-streaming Azure OpenAI client
+        classify_completion = create_azure_client(streaming=False)
+        messages = [
+            {"role": "system", "content": "Classify the message into one of the predefined categories."},
+            {"role": "user", "content": classification_prompt}
+        ]
+        
+        # Call the LLM for classification
+        response = await classify_completion(messages=messages)
+
+        # Extract classification result
+        if response and response.choices:
+            category = response.choices[0].message.content.strip()
+
+            # Update the chat_messages table with the category
+            db.execute_query("""
+                UPDATE Chat_Messages
+                SET category = %s
+                WHERE message_id = %s
+            """, (category, message_id))
+            logger.info("Message categorized as: %s", category)
+
+    except Exception as e:
+        logger.error(f"Error classifying message category: {str(e)}")

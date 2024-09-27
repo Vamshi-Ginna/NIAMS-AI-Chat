@@ -174,3 +174,15 @@ class Database:
         if self.connection and self.connection.is_connected():
             self.connection.close()
             logger.info("MySQL connection closed.")
+
+
+
+"""
+category for users table
+1.Text Summarization
+2.Creative Content Generation
+3.Language Translations
+4.Engaging in Technical Dialogues
+5.General Knowledge
+
+"""

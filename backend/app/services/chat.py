@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, Request, Depends
 from app.models.chat import ChatRequest
 from app.models.bing_search import BingSearchRequest, BingSearchResult
-from utils import create_azure_client, calculate_tokens, summarize, store_retriever, get_retriever, store_documents, get_documents, delete_retriever, delete_documents
+from utils import create_azure_client, calculate_tokens, summarize, store_retriever, get_retriever, store_documents, get_documents, delete_retriever, delete_documents, classify_message_category
 from pydantic import BaseModel
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -175,6 +175,9 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
                         VALUES (%s, %s, %s)
                     """, (price_id, message_id, cost))
 
+                    # Category classification after streaming completes
+                    await classify_message_category(request.message, message_id, db)
+
                 except Exception as e:
                     logger.error(f"Error during streaming: {str(e)}")
                     yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -218,9 +221,9 @@ async def upload_document(file: UploadFile, req: Request, payload: dict = Depend
 
         # Store the user prompt and assistant response in the chat_messages table
         db.execute_query("""
-            INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (message_id, user_id, f"Generating File Summary for {file.filename}", summary_text, "Document"))
+            INSERT INTO Chat_Messages (message_id, user_id, user_prompt, response, source, category)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (message_id, user_id, f"Generating File Summary for {file.filename}", summary_text, "Document", "Text Summarization"))
 
          # Generate price ID
         price_id = str(uuid.uuid4())  
