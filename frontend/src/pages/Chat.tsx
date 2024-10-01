@@ -65,18 +65,18 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
   // Function to scroll to the bottom of the chat
   const scrollToBottom = () => {
     if (chatContainerRef.current && isAutoScrollEnabled) {
-      console.log("Scrolling to bottom...");
+      //console.log("Scrolling to bottom...");
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     } else {
-      console.log("Auto-scroll is disabled, not scrolling.");
+      //console.log("Auto-scroll is disabled, not scrolling.");
     }
   };
 
   // Log scrolling state and isBottomInView whenever it changes
   useEffect(() => {
-    console.log("isBottomInView: ", isBottomInView);
-    console.log("isAutoScrollEnabled: ", isAutoScrollEnabled);
+    //console.log("isBottomInView: ", isBottomInView);
+    //console.log("isAutoScrollEnabled: ", isAutoScrollEnabled);
   }, [isBottomInView, isAutoScrollEnabled]);
 
   useEffect(() => {
@@ -84,9 +84,9 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
     if (isAutoScrollEnabled) {
       scrollToBottom();
     } else {
-      console.log(
-        "Auto-scroll is disabled, not scrolling to bottom on new message."
-      );
+      //console.log(
+      //  "Auto-scroll is disabled, not scrolling to bottom on new message."
+      //);
     }
   }, [chats, isAutoScrollEnabled]);
 
@@ -100,11 +100,11 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
       if (!isUserAtBottom) {
         // Disable auto-scroll if user scrolled up
         setIsAutoScrollEnabled(false);
-        console.log("User scrolled up, disabling auto-scroll.");
+        //console.log("User scrolled up, disabling auto-scroll.");
       } else {
         // Only re-enable auto-scroll when the user reaches the bottom
         setIsAutoScrollEnabled(true);
-        console.log("User reached the bottom, enabling auto-scroll.");
+        //console.log("User reached the bottom, enabling auto-scroll.");
       }
     }
   };
@@ -114,7 +114,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
     if (isBottomInView) {
       // Re-enable auto-scroll when user is back at the bottom
       setIsAutoScrollEnabled(true);
-      console.log("User is at the bottom, enabling auto-scroll.");
+      //console.log("User is at the bottom, enabling auto-scroll.");
     }
   }, [isBottomInView]);
 
@@ -244,7 +244,7 @@ const Chat: React.FC<ChatProps> = ({ chats, setChats, userName }) => {
         );
 
         if (isBottomInView) {
-          console.log("Inside set function");
+          //console.log("Inside set function");
           scrollToBottom(); // Only scroll to bottom if auto-scroll is enabled
         }
       },

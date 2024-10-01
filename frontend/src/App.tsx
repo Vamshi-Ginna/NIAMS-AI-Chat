@@ -49,7 +49,8 @@ const App: React.FC = () => {
       // Call the loginUser function to trigger the API call
       loginUser()
         .then((response) => {
-          console.log("User login successful:", response);
+          //console.log("User login successful:", response);
+          console.log("User login successful:");
         })
         .catch((error) => {
           console.error("Error during login:", error);
