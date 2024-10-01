@@ -50,7 +50,7 @@ const App: React.FC = () => {
       loginUser()
         .then((response) => {
           //console.log("User login successful:", response);
-          console.log("User login successful:");
+          console.log("User logn successful (version:2.2.0)");
         })
         .catch((error) => {
           console.error("Error during login:", error);

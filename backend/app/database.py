@@ -1,31 +1,75 @@
 # app/database.py
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error, pooling
 from config import Config
 import logging
 
 logger = logging.getLogger("database")
 
 class Database:
+    #def __init__(self):
+    #    self.connection = None
+
     def __init__(self):
-        self.connection = None
-    
-    def connect(self):
-         #Ensure the connection is established and ready to be used.
-        if self.connection and self.connection.is_connected():
-            return  # Avoid reconnecting if already connected
-        try:
-            self.connection = mysql.connector.connect(
+       try:
+            # Connection pooling setup
+            self.pool = pooling.MySQLConnectionPool(
+                pool_name="mypool",
+                pool_size=5,  # Adjust pool size based on expected load
                 host=Config.MY_SQL_HOST,
                 user=Config.MY_SQL_USER,
                 password=Config.MY_SQL_PASSWORD,
-                database=Config.MY_SQL_DB 
+                database=Config.MY_SQL_DB
             )
-            if self.connection.is_connected():
-                logger.info("Successfully connected to MySQL")
-                self.initialize_database()
+            logger.info("MySQL connection pool initialized.")
+       except Error as e:
+            logger.error("Error initializing connection pool: %s", e)
+            raise
+    
+    # def connect(self):
+    #     self.connection = self.pool.get_connection()
+    #      #Ensure the connection is established and ready to be used.
+    #     if self.connection and self.connection.is_connected():
+    #         return  # Avoid reconnecting if already connected
+    #     try:
+    #         self.connection = mysql.connector.connect(
+    #             host=Config.MY_SQL_HOST,
+    #             user=Config.MY_SQL_USER,
+    #             password=Config.MY_SQL_PASSWORD,
+    #             database=Config.MY_SQL_DB 
+    #         )
+    #         if self.connection.is_connected():
+    #             logger.info("Successfully connected to MySQL")
+    #             self.initialize_database()
+    #     except Error as e:
+    #         logger.error("Error while connecting to MySQL: %s", e)
+    #         raise
+
+    def connect(self):
+        try:
+            # Get a connection from the pool
+            self.connection = self.pool.get_connection()
+
+            # Ensure connection is valid
+            if not self.connection.is_connected():
+                raise Error("Failed to establish a connection from the pool")
+
+            logger.info("Successfully obtained connection from pool")
+            self.initialize_database()
         except Error as e:
-            logger.error("Error while connecting to MySQL: %s", e)
+            logger.error("Error while getting connection from pool: %s", e)
+            raise
+
+    def reconnect(self):
+        # Attempt to reconnect by obtaining a fresh connection from the pool
+        try:
+            self.connection = self.pool.get_connection()
+            if not self.connection.is_connected():
+                raise Error("Failed to re-establish a connection")
+
+            logger.info("Reconnected to MySQL successfully")
+        except Error as e:
+            logger.error("Error reconnecting to MySQL: %s", e)
             raise
 
     def column_exists(self, cursor, table_name, column_name):
@@ -158,13 +202,18 @@ class Database:
     
     
     def execute_query(self, query, values=None):
-        cursor = self.connection.cursor()
         try:
+            cursor = self.connection.cursor()
             cursor.execute(query, values)
             self.connection.commit()
         except Error as e:
             logger.error("Error executing query: %s", e)
-            raise
+            if not self.connection.is_connected():
+                logger.info("Attempting to reconnect...")
+                self.reconnect()
+                self.execute_query(query, values)  # Retry the query
+            else: 
+                raise e
         finally:
             cursor.close()
 
