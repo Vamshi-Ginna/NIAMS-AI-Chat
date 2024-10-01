@@ -114,6 +114,8 @@ async def send_message(request: ChatRequest, req: Request, payload: dict = Depen
                 "cost": 0  # No cost for Bing Search
             }
 
+             # Category classification after streaming completes
+            await classify_message_category(request.message, message_id, db)
             print(final_data)
             return JSONResponse(content={"data": final_data})
 
